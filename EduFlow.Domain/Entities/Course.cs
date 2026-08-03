@@ -3,9 +3,8 @@ using EduFlow.Domain.Enums;
 
 namespace EduFlow.Domain.Entities;
 
-public sealed class Course : AuditableEntity, ITenantEntity
+public sealed class Course : BaseEntity, ITenantEntity
 {
-    public Guid Id { get; set; }
     public Guid TenantId { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }

@@ -19,12 +19,20 @@ public class ApplicationDbContext(
     private static readonly MethodInfo SetTenantQueryFilterMethod = typeof(ApplicationDbContext)
         .GetMethod(nameof(SetTenantQueryFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
 
+    private static readonly MethodInfo SetSoftDeleteQueryFilterMethod = typeof(ApplicationDbContext)
+        .GetMethod(nameof(SetSoftDeleteQueryFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+    private static readonly MethodInfo SetTenantAndSoftDeleteQueryFilterMethod = typeof(ApplicationDbContext)
+        .GetMethod(nameof(SetTenantAndSoftDeleteQueryFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
     public DbSet<Tenant> Tenants { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<Course> Courses { get; set; } = null!;
     public DbSet<Step> Steps { get; set; } = null!;
     public DbSet<Enrollment> Enrollments { get; set; } = null!;
     public DbSet<StepProgress> StepProgresses { get; set; } = null!;
+    public DbSet<Comment> Comments { get; set; } = null!;
+    public DbSet<Rating> Ratings { get; set; } = null!;
     public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -39,15 +47,28 @@ public class ApplicationDbContext(
 
         modelBuilder.ApplyConfiguration(new ApplicationUserConfiguration(cryptographyService));
 
-        // Tenant-scoped business entities (ITenantEntity) get an automatic row-level filter.
-        // ApplicationUser is intentionally excluded: Identity's UserManager needs to look users up
+        // Tenant-scoped business entities (ITenantEntity) get an automatic row-level filter, and
+        // every BaseEntity (ISoftDelete) gets a filter hiding soft-deleted rows. ApplicationUser is
+        // intentionally excluded from tenant scoping: Identity's UserManager needs to look users up
         // by email during login, before any tenant is known, so it is scoped explicitly per use case
         // instead of through a blanket global filter.
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
+            var clrType = entityType.ClrType;
+            var isTenantScoped = typeof(ITenantEntity).IsAssignableFrom(clrType);
+            var isSoftDeletable = typeof(ISoftDelete).IsAssignableFrom(clrType);
+
+            if (isTenantScoped && isSoftDeletable)
             {
-                SetTenantQueryFilterMethod.MakeGenericMethod(entityType.ClrType).Invoke(this, [modelBuilder]);
+                SetTenantAndSoftDeleteQueryFilterMethod.MakeGenericMethod(clrType).Invoke(this, [modelBuilder]);
+            }
+            else if (isTenantScoped)
+            {
+                SetTenantQueryFilterMethod.MakeGenericMethod(clrType).Invoke(this, [modelBuilder]);
+            }
+            else if (isSoftDeletable)
+            {
+                SetSoftDeleteQueryFilterMethod.MakeGenericMethod(clrType).Invoke(this, [modelBuilder]);
             }
         }
     }
@@ -57,5 +78,19 @@ public class ApplicationDbContext(
     {
         modelBuilder.Entity<TEntity>()
             .HasQueryFilter(e => tenantContext.IsSysAdmin || e.TenantId == tenantContext.TenantId);
+    }
+
+    private void SetSoftDeleteQueryFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : class, ISoftDelete
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasQueryFilter(e => !e.IsDeleted);
+    }
+
+    private void SetTenantAndSoftDeleteQueryFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : class, ITenantEntity, ISoftDelete
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasQueryFilter(e => !e.IsDeleted && (tenantContext.IsSysAdmin || e.TenantId == tenantContext.TenantId));
     }
 }

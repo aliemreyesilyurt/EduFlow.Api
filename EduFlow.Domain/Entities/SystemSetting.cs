@@ -4,9 +4,8 @@ namespace EduFlow.Domain.Entities;
 /// Key/value configuration entry. <see cref="TenantId"/> is null for a global/system default;
 /// a non-null value is a per-tenant override resolved on top of the global default.
 /// </summary>
-public sealed class SystemSetting : AuditableEntity
+public sealed class SystemSetting : BaseEntity
 {
-    public Guid Id { get; set; }
     public Guid? TenantId { get; set; }
     public required string Key { get; set; }
     public string? Value { get; set; }

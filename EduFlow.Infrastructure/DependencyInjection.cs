@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
 using EduFlow.Application.Abstractions.Identity;
@@ -9,6 +10,7 @@ using EduFlow.Infrastructure.Authentication;
 using EduFlow.Infrastructure.Database;
 using EduFlow.Infrastructure.Identity;
 using EduFlow.Infrastructure.Interceptors;
+using EduFlow.Infrastructure.Logging;
 using EduFlow.Infrastructure.Multitenancy;
 using EduFlow.Infrastructure.Notifications;
 using EduFlow.Infrastructure.Repository;
@@ -18,6 +20,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace EduFlow.Infrastructure;
 
@@ -33,16 +36,39 @@ public static class DependencyInjection
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<ICryptographyService, DataProtectionCryptographyService>();
 
-        services.AddSingleton<AuditInterceptor>();
+        services.AddScoped<SoftDeleteInterceptor>();
+        services.AddScoped<AuditInterceptor>();
         services.AddScoped<TenantSaveChangesInterceptor>();
+        services.AddScoped<AuditLogInterceptor>();
 
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.AddInterceptors(
+                sp.GetRequiredService<SoftDeleteInterceptor>(),
                 sp.GetRequiredService<AuditInterceptor>(),
-                sp.GetRequiredService<TenantSaveChangesInterceptor>());
+                sp.GetRequiredService<TenantSaveChangesInterceptor>(),
+                sp.GetRequiredService<AuditLogInterceptor>());
             options.UseNpgsql(configuration.GetConnectionString("connection"));
         });
+
+        // Separate context on purpose: append-only audit/log tables shouldn't share migrations
+        // or query filters with the business schema, even though they use the same database today.
+        services.AddDbContext<LoggingDbContext>(options =>
+        {
+            var loggingConnection = configuration.GetConnectionString("logging")
+                ?? configuration.GetConnectionString("connection");
+
+            options.UseNpgsql(loggingConnection,
+                npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Logging"));
+        });
+
+        services.AddSingleton(Channel.CreateBounded<AppLog>(new BoundedChannelOptions(10_000)
+        {
+            SingleReader = true,
+            FullMode = BoundedChannelFullMode.DropWrite
+        }));
+        services.AddSingleton<ILoggerProvider, DatabaseLoggerProvider>();
+        services.AddHostedService<DatabaseLogFlusherService>();
 
         services
             .AddIdentityCore<ApplicationUser>(options =>

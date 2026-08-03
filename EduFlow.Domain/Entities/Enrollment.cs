@@ -2,9 +2,8 @@ using EduFlow.Domain.Abstractions;
 
 namespace EduFlow.Domain.Entities;
 
-public sealed class Enrollment : AuditableEntity, ITenantEntity
+public sealed class Enrollment : BaseEntity, ITenantEntity
 {
-    public Guid Id { get; set; }
     public Guid TenantId { get; set; }
     public Guid CourseId { get; set; }
     public Guid StudentId { get; set; }

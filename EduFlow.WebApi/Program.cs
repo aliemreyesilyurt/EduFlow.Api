@@ -8,6 +8,7 @@ using EduFlow.Infrastructure;
 using EduFlow.Infrastructure.Authentication;
 using EduFlow.Infrastructure.Database;
 using EduFlow.Infrastructure.Database.Seed;
+using EduFlow.Infrastructure.Logging;
 using EduFlow.WebApi.Exceptions;
 using EduFlow.WebApi.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -89,6 +90,9 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await dbContext.Database.MigrateAsync();
+
+    var loggingDbContext = scope.ServiceProvider.GetRequiredService<LoggingDbContext>();
+    await loggingDbContext.Database.MigrateAsync();
 }
 
 await IdentitySeeder.SeedAsync(app.Services);
