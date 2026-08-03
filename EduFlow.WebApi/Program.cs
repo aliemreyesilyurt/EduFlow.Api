@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Scalar.AspNetCore;
 using EduFlow.Application;
 using EduFlow.Application.Constants;
@@ -10,6 +11,7 @@ using EduFlow.Infrastructure.Database.Seed;
 using EduFlow.WebApi.Exceptions;
 using EduFlow.WebApi.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -51,6 +53,20 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(PolicyNames.StudentOnly, p => p.RequireRole(Roles.Student))
     .AddPolicy(PolicyNames.Authenticated, p => p.RequireAuthenticatedUser());
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(RateLimitPolicies.Auth, httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromSeconds(60),
+                PermitLimit = 10,
+                QueueLimit = 0
+            }));
+});
+
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
 builder.Services.AddCors(options =>
@@ -76,6 +92,14 @@ using (var scope = app.Services.CreateScope())
 }
 
 await IdentitySeeder.SeedAsync(app.Services);
+await SystemSettingsSeeder.SeedAsync(app.Services);
+
+app.UseExceptionHandler();
+app.UseHttpsRedirection();
+app.UseCors("VueClient");
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapApiEndpoints();
 
@@ -93,11 +117,5 @@ app.MapScalarApiReference(options =>
         ScalarTarget.CSharp,
         ScalarClient.HttpClient);
 });
-
-app.UseHttpsRedirection();
-app.UseCors("VueClient");
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseExceptionHandler();
 
 app.Run();

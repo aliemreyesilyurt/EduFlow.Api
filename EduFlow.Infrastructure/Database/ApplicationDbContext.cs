@@ -25,6 +25,7 @@ public class ApplicationDbContext(
     public DbSet<Step> Steps { get; set; } = null!;
     public DbSet<Enrollment> Enrollments { get; set; } = null!;
     public DbSet<StepProgress> StepProgresses { get; set; } = null!;
+    public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

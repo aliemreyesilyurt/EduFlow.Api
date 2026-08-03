@@ -12,5 +12,8 @@ public sealed class RefreshToken
     public DateTime ExpiresOn { get; set; }
     public DateTime? RevokedOn { get; set; }
 
+    /// <summary>Set when this token was rotated into a new one; used to detect refresh-token reuse.</summary>
+    public Guid? ReplacedByTokenId { get; set; }
+
     public bool IsActive => RevokedOn is null && ExpiresOn > DateTime.UtcNow;
 }

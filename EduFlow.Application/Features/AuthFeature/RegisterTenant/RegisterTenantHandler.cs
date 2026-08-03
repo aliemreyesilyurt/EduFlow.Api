@@ -3,9 +3,12 @@ namespace EduFlow.Application.Features.AuthFeature.RegisterTenant;
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
 using EduFlow.Application.Abstractions.Identity;
+using EduFlow.Application.Abstractions.Notifications;
 using EduFlow.Application.Constants;
+using EduFlow.Application.Options;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
+using Microsoft.Extensions.Options;
 
 public sealed record RegisterTenantRequest(
     string TenantName,
@@ -14,17 +17,14 @@ public sealed record RegisterTenantRequest(
     string AdminFirstName,
     string AdminLastName);
 
-public sealed record RegisterTenantResponse(
-    Guid TenantId,
-    Guid AdminUserId,
-    string AccessToken,
-    string RefreshToken,
-    DateTime AccessTokenExpiresOn);
+public sealed record RegisterTenantResponse(Guid TenantId, Guid AdminUserId);
 
 public sealed class RegisterTenantHandler(
     IRepository<Tenant> tenantRepository,
     IUnitOfWork unitOfWork,
-    IIdentityService identityService) : IHandler<RegisterTenantRequest, Result<RegisterTenantResponse>>
+    IIdentityService identityService,
+    IEmailSender emailSender,
+    IOptions<ClientAppOptions> clientAppOptions) : IHandler<RegisterTenantRequest, Result<RegisterTenantResponse>>
 {
     public async Task<Result<RegisterTenantResponse>> HandleAsync(RegisterTenantRequest command, CancellationToken cancellationToken)
     {
@@ -54,21 +54,22 @@ public sealed class RegisterTenantHandler(
             return Result.Failure<RegisterTenantResponse>(createUserResult.Error);
         }
 
-        var loginResult = await identityService.LoginAsync(command.AdminEmail, command.AdminPassword, cancellationToken);
+        var tokenResult = await identityService.GenerateEmailConfirmationTokenAsync(command.AdminEmail, cancellationToken);
 
-        if (loginResult.IsFailure)
+        if (tokenResult.IsSuccess)
         {
-            return Result.Failure<RegisterTenantResponse>(loginResult.Error);
+            var email = AuthEmails.EmailVerification(
+                clientAppOptions.Value.BaseUrl,
+                tokenResult.Value.Email,
+                tokenResult.Value.FirstName,
+                tokenResult.Value.UserId,
+                tokenResult.Value.Token,
+                tokenResult.Value.TenantId);
+
+            await emailSender.SendAsync(email, cancellationToken);
         }
 
-        var tokens = loginResult.Value;
-
-        return Result.Success(new RegisterTenantResponse(
-            tenant.Id,
-            createUserResult.Value,
-            tokens.AccessToken,
-            tokens.RefreshToken,
-            tokens.AccessTokenExpiresOn));
+        return Result.Success(new RegisterTenantResponse(tenant.Id, createUserResult.Value));
     }
 
     private static string Slugify(string name) =>

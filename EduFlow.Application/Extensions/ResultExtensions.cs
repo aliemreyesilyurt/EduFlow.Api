@@ -24,4 +24,14 @@ public static class ResultExtensions
             ? onSuccess(result.Value)
             : onFailure(result.Error);
     }
+
+    public static IResult ToHttpResult(this Error error) => error.Type switch
+    {
+        ErrorType.NotFound => Results.NotFound(error),
+        ErrorType.Conflict => Results.Conflict(error),
+        ErrorType.Unauthorized => Results.Unauthorized(),
+        ErrorType.Forbidden => Results.Problem(detail: error.Description, statusCode: StatusCodes.Status403Forbidden),
+        ErrorType.Validation => Results.BadRequest(error),
+        _ => Results.BadRequest(error)
+    };
 }

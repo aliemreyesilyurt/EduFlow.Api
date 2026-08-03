@@ -3,6 +3,7 @@ using EduFlow.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace EduFlow.Infrastructure.Database.Seed;
 
@@ -14,6 +15,7 @@ public static class IdentitySeeder
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(IdentitySeeder));
 
         foreach (var role in Roles.All)
         {
@@ -48,6 +50,13 @@ public static class IdentitySeeder
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(sysAdmin, Roles.SysAdmin);
+        }
+        else
+        {
+            logger.LogError(
+                "Failed to seed SysAdmin user {Email}: {Errors}",
+                sysAdminEmail,
+                string.Join("; ", result.Errors.Select(e => e.Description)));
         }
     }
 }

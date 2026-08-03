@@ -3,9 +3,12 @@ namespace EduFlow.Application.Features.AuthFeature.RegisterStudent;
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
 using EduFlow.Application.Abstractions.Identity;
+using EduFlow.Application.Abstractions.Notifications;
 using EduFlow.Application.Constants;
+using EduFlow.Application.Options;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
+using Microsoft.Extensions.Options;
 
 public sealed record RegisterStudentRequest(
     string TenantSlug,
@@ -14,15 +17,13 @@ public sealed record RegisterStudentRequest(
     string FirstName,
     string LastName);
 
-public sealed record RegisterStudentResponse(
-    Guid UserId,
-    string AccessToken,
-    string RefreshToken,
-    DateTime AccessTokenExpiresOn);
+public sealed record RegisterStudentResponse(Guid UserId);
 
 public sealed class RegisterStudentHandler(
     IRepository<Tenant> tenantRepository,
-    IIdentityService identityService) : IHandler<RegisterStudentRequest, Result<RegisterStudentResponse>>
+    IIdentityService identityService,
+    IEmailSender emailSender,
+    IOptions<ClientAppOptions> clientAppOptions) : IHandler<RegisterStudentRequest, Result<RegisterStudentResponse>>
 {
     public async Task<Result<RegisterStudentResponse>> HandleAsync(RegisterStudentRequest command, CancellationToken cancellationToken)
     {
@@ -49,19 +50,21 @@ public sealed class RegisterStudentHandler(
             return Result.Failure<RegisterStudentResponse>(createUserResult.Error);
         }
 
-        var loginResult = await identityService.LoginAsync(command.Email, command.Password, cancellationToken);
+        var tokenResult = await identityService.GenerateEmailConfirmationTokenAsync(command.Email, cancellationToken);
 
-        if (loginResult.IsFailure)
+        if (tokenResult.IsSuccess)
         {
-            return Result.Failure<RegisterStudentResponse>(loginResult.Error);
+            var email = AuthEmails.EmailVerification(
+                clientAppOptions.Value.BaseUrl,
+                tokenResult.Value.Email,
+                tokenResult.Value.FirstName,
+                tokenResult.Value.UserId,
+                tokenResult.Value.Token,
+                tokenResult.Value.TenantId);
+
+            await emailSender.SendAsync(email, cancellationToken);
         }
 
-        var tokens = loginResult.Value;
-
-        return Result.Success(new RegisterStudentResponse(
-            createUserResult.Value,
-            tokens.AccessToken,
-            tokens.RefreshToken,
-            tokens.AccessTokenExpiresOn));
+        return Result.Success(new RegisterStudentResponse(createUserResult.Value));
     }
 }

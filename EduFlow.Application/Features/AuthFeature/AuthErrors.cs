@@ -15,4 +15,19 @@ public static class AuthErrors
 
     public static readonly Error TenantNotFound =
         Error.NotFound("Auth.TenantNotFound", "The tenant was not found");
+
+    public static readonly Error AccountLockedOut =
+        Error.Forbidden("Auth.AccountLockedOut", "The account is temporarily locked due to too many failed login attempts");
+
+    public static readonly Error EmailNotConfirmed =
+        Error.Forbidden("Auth.EmailNotConfirmed", "The email address has not been confirmed yet");
+
+    public static readonly Error InvalidToken =
+        Error.Validation("Auth.InvalidToken", "The token is invalid or has expired");
+
+    public static readonly Error UserNotFound =
+        Error.NotFound("Auth.UserNotFound", "The user was not found");
+
+    public static readonly Error InvitationAlreadyAccepted =
+        Error.Conflict("Auth.InvitationAlreadyAccepted", "This invitation has already been accepted");
 }

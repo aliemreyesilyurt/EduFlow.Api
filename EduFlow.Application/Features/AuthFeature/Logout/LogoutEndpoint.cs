@@ -17,7 +17,7 @@ internal sealed class LogoutEndpoint : IApiEndpoint
                 var result = await handler.HandleAsync(command, cancellationToken);
                 return result.Match(
                     onSuccess: () => Results.NoContent(),
-                    onFailure: error => Results.BadRequest(error));
+                    onFailure: error => error.ToHttpResult());
             })
             .WithTags(ApiTags.Auth)
             .AllowAnonymous()

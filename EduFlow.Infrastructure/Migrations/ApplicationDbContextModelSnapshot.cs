@@ -173,6 +173,48 @@ namespace EduFlow.Infrastructure.Migrations
                     b.ToTable("StepProgresses");
                 });
 
+            modelBuilder.Entity("EduFlow.Domain.Entities.SystemSetting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsSecret")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique()
+                        .HasFilter("\"TenantId\" IS NULL");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique()
+                        .HasFilter("\"TenantId\" IS NOT NULL");
+
+                    b.ToTable("SystemSettings");
+                });
+
             modelBuilder.Entity("EduFlow.Domain.Entities.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -325,17 +367,26 @@ namespace EduFlow.Infrastructure.Migrations
                     b.Property<DateTime>("ExpiresOn")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("ReplacedByTokenId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("RevokedOn")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
                 });
@@ -488,6 +539,23 @@ namespace EduFlow.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("StepId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EduFlow.Domain.Entities.SystemSetting", b =>
+                {
+                    b.HasOne("EduFlow.Domain.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("EduFlow.Infrastructure.Identity.RefreshToken", b =>
+                {
+                    b.HasOne("EduFlow.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

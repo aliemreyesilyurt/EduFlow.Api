@@ -16,12 +16,13 @@ internal sealed class RegisterTenantEndpoint : IApiEndpoint
             {
                 var result = await handler.HandleAsync(command, cancellationToken);
                 return result.Match(
-                    onSuccess: () => Results.Ok(result.Value),
-                    onFailure: error => Results.BadRequest(error));
+                    onSuccess: () => Results.Accepted(value: result.Value),
+                    onFailure: error => error.ToHttpResult());
             })
             .WithTags(ApiTags.Auth)
             .AllowAnonymous()
-            .Produces<RegisterTenantResponse>(StatusCodes.Status200OK)
+            .RequireRateLimiting(RateLimitPolicies.Auth)
+            .Produces<RegisterTenantResponse>(StatusCodes.Status202Accepted)
             .Produces(StatusCodes.Status400BadRequest);
     }
 }
