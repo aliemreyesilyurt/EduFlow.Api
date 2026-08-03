@@ -2,6 +2,7 @@ namespace EduFlow.Application.Features.CommentFeature.CreateCourseComment;
 
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
+using EduFlow.Application.Abstractions.Identity;
 using EduFlow.Application.Features.CourseFeature;
 using EduFlow.Application.Features.EnrollmentFeature;
 using EduFlow.Domain.Abstractions;
@@ -14,6 +15,7 @@ public sealed class CreateCourseCommentHandler(
     IRepository<Enrollment> enrollmentRepository,
     IRepository<Comment> commentRepository,
     IUnitOfWork unitOfWork,
+    IIdentityService identityService,
     ITenantContext tenantContext) : IHandler<CreateCourseCommentRequest, Result<CommentResponse>>
 {
     public async Task<Result<CommentResponse>> HandleAsync(CreateCourseCommentRequest command, CancellationToken cancellationToken)
@@ -50,7 +52,11 @@ public sealed class CreateCourseCommentHandler(
         await commentRepository.AddAsync(comment, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);
 
+        var authorNames = await identityService.GetDisplayNamesAsync([comment.AuthorId], cancellationToken);
+
         return Result.Success(new CommentResponse(
-            comment.Id, comment.CourseId, comment.StepId, comment.AuthorId, comment.Content, comment.IsHidden, comment.CreatedOn));
+            comment.Id, comment.CourseId, comment.StepId, comment.AuthorId,
+            authorNames.GetValueOrDefault(comment.AuthorId, "Unknown"),
+            comment.Content, comment.IsHidden, comment.CreatedOn));
     }
 }

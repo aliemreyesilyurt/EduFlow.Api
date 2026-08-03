@@ -2,6 +2,7 @@ namespace EduFlow.Application.Features.CourseFeature.GetCourseById;
 
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
+using EduFlow.Application.Abstractions.Identity;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
 using EduFlow.Domain.Enums;
@@ -13,6 +14,7 @@ public sealed record GetCourseByIdResponse(
     string Title,
     string? Description,
     Guid InstructorId,
+    string InstructorName,
     CourseStatus Status,
     DateTime? PublishedOn,
     double? AverageRating,
@@ -23,6 +25,7 @@ public sealed class GetCourseByIdHandler(
     IRepository<Course> courseRepository,
     IRepository<Rating> ratingRepository,
     IRepository<Comment> commentRepository,
+    IIdentityService identityService,
     ITenantContext tenantContext) : IHandler<GetCourseByIdRequest, Result<GetCourseByIdResponse>>
 {
     public async Task<Result<GetCourseByIdResponse>> HandleAsync(GetCourseByIdRequest command, CancellationToken cancellationToken)
@@ -43,8 +46,12 @@ public sealed class GetCourseByIdHandler(
 
         var averageRating = ratings.Count == 0 ? null : (double?)Math.Round(ratings.Average(r => r.Value), 2);
 
+        var instructorNames = await identityService.GetDisplayNamesAsync([course.InstructorId], cancellationToken);
+
         return Result.Success(new GetCourseByIdResponse(
-            course.Id, course.Title, course.Description, course.InstructorId, course.Status, course.PublishedOn,
+            course.Id, course.Title, course.Description, course.InstructorId,
+            instructorNames.GetValueOrDefault(course.InstructorId, "Unknown"),
+            course.Status, course.PublishedOn,
             averageRating, ratings.Count, commentCount));
     }
 }

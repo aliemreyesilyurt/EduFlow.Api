@@ -5,6 +5,7 @@ public sealed record CommentResponse(
     Guid CourseId,
     Guid? StepId,
     Guid AuthorId,
+    string AuthorName,
     string Content,
     bool IsHidden,
     DateTime CreatedOn);

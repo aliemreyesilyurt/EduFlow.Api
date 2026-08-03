@@ -2,6 +2,7 @@ namespace EduFlow.Application.Features.CommentFeature.CreateStepComment;
 
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
+using EduFlow.Application.Abstractions.Identity;
 using EduFlow.Application.Features.CourseFeature;
 using EduFlow.Application.Features.EnrollmentFeature;
 using EduFlow.Application.Features.StepFeature;
@@ -16,6 +17,7 @@ public sealed class CreateStepCommentHandler(
     IRepository<Enrollment> enrollmentRepository,
     IRepository<Comment> commentRepository,
     IUnitOfWork unitOfWork,
+    IIdentityService identityService,
     ITenantContext tenantContext) : IHandler<CreateStepCommentRequest, Result<CommentResponse>>
 {
     public async Task<Result<CommentResponse>> HandleAsync(CreateStepCommentRequest command, CancellationToken cancellationToken)
@@ -59,7 +61,11 @@ public sealed class CreateStepCommentHandler(
         await commentRepository.AddAsync(comment, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);
 
+        var authorNames = await identityService.GetDisplayNamesAsync([comment.AuthorId], cancellationToken);
+
         return Result.Success(new CommentResponse(
-            comment.Id, comment.CourseId, comment.StepId, comment.AuthorId, comment.Content, comment.IsHidden, comment.CreatedOn));
+            comment.Id, comment.CourseId, comment.StepId, comment.AuthorId,
+            authorNames.GetValueOrDefault(comment.AuthorId, "Unknown"),
+            comment.Content, comment.IsHidden, comment.CreatedOn));
     }
 }

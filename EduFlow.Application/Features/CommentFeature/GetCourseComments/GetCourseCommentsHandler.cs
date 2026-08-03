@@ -2,6 +2,7 @@ namespace EduFlow.Application.Features.CommentFeature.GetCourseComments;
 
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
+using EduFlow.Application.Abstractions.Identity;
 using EduFlow.Application.Features.CourseFeature;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
@@ -13,6 +14,7 @@ public sealed record GetCourseCommentsResponse(IReadOnlyList<CommentResponse> Co
 public sealed class GetCourseCommentsHandler(
     IRepository<Course> courseRepository,
     IRepository<Comment> commentRepository,
+    IIdentityService identityService,
     ITenantContext tenantContext) : IHandler<GetCourseCommentsRequest, Result<GetCourseCommentsResponse>>
 {
     public async Task<Result<GetCourseCommentsResponse>> HandleAsync(GetCourseCommentsRequest command, CancellationToken cancellationToken)
@@ -26,10 +28,18 @@ public sealed class GetCourseCommentsHandler(
 
         var canModerate = CourseAccess.CanManage(course, tenantContext);
 
-        var comments = (await commentRepository.GetAllAsync(cancellationToken))
+        var matchingComments = (await commentRepository.GetAllAsync(cancellationToken))
             .Where(c => c.CourseId == command.CourseId && c.StepId is null && (canModerate || !c.IsHidden))
             .OrderByDescending(c => c.CreatedOn)
-            .Select(c => new CommentResponse(c.Id, c.CourseId, c.StepId, c.AuthorId, c.Content, c.IsHidden, c.CreatedOn))
+            .ToList();
+
+        var authorNames = await identityService.GetDisplayNamesAsync(
+            matchingComments.Select(c => c.AuthorId), cancellationToken);
+
+        var comments = matchingComments
+            .Select(c => new CommentResponse(
+                c.Id, c.CourseId, c.StepId, c.AuthorId, authorNames.GetValueOrDefault(c.AuthorId, "Unknown"),
+                c.Content, c.IsHidden, c.CreatedOn))
             .ToList();
 
         return Result.Success(new GetCourseCommentsResponse(comments));

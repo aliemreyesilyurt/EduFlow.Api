@@ -265,6 +265,20 @@ internal sealed class IdentityService(
         return await IssueTokensAsync(user, cancellationToken);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken)
+    {
+        var distinctIds = userIds.Distinct().ToArray();
+
+        if (distinctIds.Length == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        return await userManager.Users
+            .Where(u => distinctIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => $"{u.FirstName} {u.LastName}", cancellationToken);
+    }
+
     private async Task<Result<AuthTokens>> IssueTokensAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
         var (accessToken, expiresOn, entity, rawToken) = await BuildTokensAsync(user);

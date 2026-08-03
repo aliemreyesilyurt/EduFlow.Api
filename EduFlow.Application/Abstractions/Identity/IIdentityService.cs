@@ -19,6 +19,8 @@ public interface IIdentityService
 
     Task<Result<UserTokenResult>> GenerateInvitationTokenAsync(Guid userId, CancellationToken cancellationToken);
     Task<Result<AuthTokens>> AcceptInvitationAsync(Guid userId, string token, string password, CancellationToken cancellationToken);
+
+    Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken);
 }
 
 public sealed record CreateUserRequest(
