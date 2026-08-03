@@ -20,7 +20,7 @@ internal sealed class InviteInstructorEndpoint : IApiEndpoint
                     onFailure: error => Results.BadRequest(error));
             })
             .WithTags(ApiTags.Auth)
-            .RequireAuthorization(PolicyNames.TenantAdmin)
+            .RequireAuthorization(PolicyNames.TenantAdminOrAbove)
             .Produces<InviteInstructorResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
