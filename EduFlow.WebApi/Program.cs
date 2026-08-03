@@ -44,10 +44,12 @@ builder.Services
     });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(PolicyNames.SysAdmin, p => p.RequireRole(Roles.SysAdmin))
-    .AddPolicy(PolicyNames.TenantAdmin, p => p.RequireRole(Roles.SysAdmin, Roles.TenantAdmin))
-    .AddPolicy(PolicyNames.Instructor, p => p.RequireRole(Roles.SysAdmin, Roles.TenantAdmin, Roles.Instructor))
-    .AddPolicy(PolicyNames.Student, p => p.RequireRole(Roles.SysAdmin, Roles.TenantAdmin, Roles.Instructor, Roles.Student));
+    .AddPolicy(PolicyNames.SysAdminOnly, p => p.RequireRole(Roles.SysAdmin))
+    .AddPolicy(PolicyNames.TenantAdminOrAbove, p => p.RequireRole(Roles.SysAdmin, Roles.TenantAdmin))
+    .AddPolicy(PolicyNames.InstructorOrAbove, p => p.RequireRole(Roles.SysAdmin, Roles.TenantAdmin, Roles.Instructor))
+    .AddPolicy(PolicyNames.StudentOrAbove, p => p.RequireRole(Roles.SysAdmin, Roles.TenantAdmin, Roles.Instructor, Roles.Student))
+    .AddPolicy(PolicyNames.StudentOnly, p => p.RequireRole(Roles.Student))
+    .AddPolicy(PolicyNames.Authenticated, p => p.RequireAuthenticatedUser());
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
