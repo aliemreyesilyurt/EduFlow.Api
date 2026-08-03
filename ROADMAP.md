@@ -7,8 +7,9 @@ eder, yorum/puan bırakır, kurs sonunda sınava girer ve başarılı olursa sis
 **Kapsam:** Backend (.NET 10, Clean Architecture + Vertical Slice) ve Frontend (Vue.js) birlikte.
 
 **Mevcut durum:** Multi-tenant altyapı, kimlik doğrulama (login/logout/refresh/tenant & öğrenci
-kaydı/eğitmen daveti) ve rol yapısı (SysAdmin, TenantAdmin, Instructor, Student) hazır. `Book`
-feature'ı template'ten kalma bir örnek CRUD olup gerçek domain ile değiştirilecek.
+kaydı/eğitmen daveti) ve rol yapısı (SysAdmin, TenantAdmin, Instructor, Student) hazır. `Course`
+ve `Step` üzerinde tam CRUD + yayınlama/sıralama akışı çalışıyor; sırada öğrenci kaydı
+(Enrollment) var.
 
 **Öncelik sırası:** Önce auth akışını sağlamlaştırıp Course/Enrollment temelini kurmak (backend
 ağırlıklı), ardından frontend'i bu API'lerin üzerine inşa etmek, sonra sınav/puan/bütünlük
@@ -67,15 +68,27 @@ KVKK/GDPR kapsamında açık rıza ve veri saklama politikası gerektirir — bu
       açıkça `AllowAnonymous` ya da uygun `PolicyNames` politikasını taşıyor; hata→HTTP durum kodu
       eşlemesi `Error.ToHttpResult()` ile merkezileştirildi
 
-## Faz 2 — Çekirdek Kurs Domain'i: Course + Step *(Backend)*
+## Faz 2 — Çekirdek Kurs Domain'i: Course + Step *(Backend)* ✅
 **Amaç:** Tek aşamalı ya da çok adımlı (step-by-step) kursların temelini kurmak.
 *(Not: `Course`/`Step` entity'leri ve şema Faz 0'da hazırlandı; bu fazda CRUD/endpoint katmanı yazılacak.)*
 
-- [ ] `Course` entity + CRUD (create/list/detail/update/delete/publish)
-- [ ] `Step` entity (sıralı, kurs tek adımdan da oluşabilir) + CRUD, sıralama desteği
-- [ ] Basit içerik tipi desteği (video linki, döküman linki, metin) — dosya yükleme Faz 7'de
-- [ ] Instructor–Course ilişkisi (bir kursun sahibi/eğitmeni)
-- [ ] Tenant-scoped kurs listeleme/detay endpoint'leri
+- [x] `Course` entity + CRUD (create/list/detail/update/delete/publish) — `CourseFeature` altında
+      `CreateCourse`, `GetCourseById`, `GetAllCourses`, `UpdateCourse`, `DeleteCourse`,
+      `PublishCourse` slice'ları eklendi
+- [x] `Step` entity (sıralı, kurs tek adımdan da oluşabilir) + CRUD, sıralama desteği —
+      `StepFeature` altında `CreateStep`, `GetStepById`, `GetAllSteps`, `UpdateStep`, `DeleteStep`
+      eklendi; yeni adım her zaman sona eklenir, `POST courses/{courseId}/steps/reorder` tüm
+      sırayı tek seferde günceller (unique `(CourseId, Order)` indeksini ihlal etmemek için
+      geçici negatif değerler üzerinden iki adımlı güncelleme yapılır)
+- [x] Basit içerik tipi desteği (video linki, döküman linki, metin) — `StepContentType`'a göre
+      `ContentUrl`/`TextContent` koşullu olarak zorunlu kılınıyor (FluentValidation); dosya
+      yükleme Faz 7'de
+- [x] Instructor–Course ilişkisi (bir kursun sahibi/eğitmeni) — `Course.InstructorId` oluşturan
+      kullanıcıya set ediliyor; yönetim (update/delete/publish/step CRUD) sahibi eğitmen veya
+      TenantAdmin/SysAdmin ile sınırlı (`CourseAccess.CanManage`)
+- [x] Tenant-scoped kurs listeleme/detay endpoint'leri — tenant izolasyonu mevcut EF Core global
+      query filter'ı ile otomatik; ayrıca taslak/arşiv kurslar sadece sahibi/TenantAdmin/SysAdmin
+      tarafından görülebiliyor, yayınlanan kurslar herkese açık (`CourseAccess.CanView`)
 
 ## Faz 3 — Enrollment & Öğrenme İlerlemesi *(Backend)*
 **Amaç:** Öğrencinin bir kursa kaydolup ilerlemesini takip edebilmesi.
