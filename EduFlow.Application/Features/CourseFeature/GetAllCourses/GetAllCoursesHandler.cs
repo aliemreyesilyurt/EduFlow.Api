@@ -2,6 +2,7 @@ namespace EduFlow.Application.Features.CourseFeature.GetAllCourses;
 
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
+using EduFlow.Application.Abstractions.Identity;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
 using EduFlow.Domain.Enums;
@@ -13,6 +14,7 @@ public sealed record CourseSummary(
     string Title,
     string? Description,
     Guid InstructorId,
+    string InstructorName,
     CourseStatus Status,
     DateTime? PublishedOn,
     double? AverageRating,
@@ -25,6 +27,7 @@ public sealed class GetAllCoursesHandler(
     IRepository<Course> courseRepository,
     IRepository<Rating> ratingRepository,
     IRepository<Comment> commentRepository,
+    IIdentityService identityService,
     ITenantContext tenantContext) : IHandler<GetAllCoursesRequest, Result<GetAllCoursesResponse>>
 {
     public async Task<Result<GetAllCoursesResponse>> HandleAsync(GetAllCoursesRequest command, CancellationToken cancellationToken)
@@ -40,9 +43,15 @@ public sealed class GetAllCoursesHandler(
             .GroupBy(c => c.CourseId)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        var visible = courses
+        var visibleCourses = courses
             .Where(c => CourseAccess.CanView(c, tenantContext))
             .OrderByDescending(c => c.CreatedOn)
+            .ToList();
+
+        var instructorNames = await identityService.GetDisplayNamesAsync(
+            visibleCourses.Select(c => c.InstructorId), cancellationToken);
+
+        var visible = visibleCourses
             .Select(c =>
             {
                 var ratings = ratingsByCourse.GetValueOrDefault(c.Id);
@@ -51,7 +60,9 @@ public sealed class GetAllCoursesHandler(
                     : Math.Round(ratings.Average(r => r.Value), 2);
 
                 return new CourseSummary(
-                    c.Id, c.Title, c.Description, c.InstructorId, c.Status, c.PublishedOn,
+                    c.Id, c.Title, c.Description, c.InstructorId,
+                    instructorNames.GetValueOrDefault(c.InstructorId, "Unknown"),
+                    c.Status, c.PublishedOn,
                     averageRating, ratings?.Count ?? 0, commentCountsByCourse.GetValueOrDefault(c.Id));
             })
             .ToList();

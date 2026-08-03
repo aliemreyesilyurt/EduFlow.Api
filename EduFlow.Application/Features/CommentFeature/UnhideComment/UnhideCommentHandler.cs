@@ -2,6 +2,7 @@ namespace EduFlow.Application.Features.CommentFeature.UnhideComment;
 
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
+using EduFlow.Application.Abstractions.Identity;
 using EduFlow.Application.Features.CourseFeature;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
@@ -12,6 +13,7 @@ public sealed class UnhideCommentHandler(
     IRepository<Comment> commentRepository,
     IRepository<Course> courseRepository,
     IUnitOfWork unitOfWork,
+    IIdentityService identityService,
     ITenantContext tenantContext) : IHandler<UnhideCommentRequest, Result<CommentResponse>>
 {
     public async Task<Result<CommentResponse>> HandleAsync(UnhideCommentRequest command, CancellationToken cancellationToken)
@@ -35,7 +37,11 @@ public sealed class UnhideCommentHandler(
         await commentRepository.UpdateAsync(comment, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);
 
+        var authorNames = await identityService.GetDisplayNamesAsync([comment.AuthorId], cancellationToken);
+
         return Result.Success(new CommentResponse(
-            comment.Id, comment.CourseId, comment.StepId, comment.AuthorId, comment.Content, comment.IsHidden, comment.CreatedOn));
+            comment.Id, comment.CourseId, comment.StepId, comment.AuthorId,
+            authorNames.GetValueOrDefault(comment.AuthorId, "Unknown"),
+            comment.Content, comment.IsHidden, comment.CreatedOn));
     }
 }
