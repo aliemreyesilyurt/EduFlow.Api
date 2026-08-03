@@ -15,6 +15,8 @@ public sealed class TenantContext(IHttpContextAccessor httpContextAccessor) : IT
 
     public bool IsSysAdmin => User?.IsInRole(Roles.SysAdmin) ?? false;
 
+    public bool IsInRole(string role) => User?.IsInRole(role) ?? false;
+
     private Guid? GetGuidClaim(string claimType)
     {
         var value = User?.FindFirst(claimType)?.Value;
