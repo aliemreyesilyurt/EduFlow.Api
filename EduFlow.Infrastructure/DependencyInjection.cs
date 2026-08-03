@@ -1,14 +1,19 @@
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
 using EduFlow.Application.Abstractions.Identity;
+using EduFlow.Application.Abstractions.Notifications;
 using EduFlow.Application.Abstractions.Security;
+using EduFlow.Application.Abstractions.Settings;
+using EduFlow.Application.Options;
 using EduFlow.Infrastructure.Authentication;
 using EduFlow.Infrastructure.Database;
 using EduFlow.Infrastructure.Identity;
 using EduFlow.Infrastructure.Interceptors;
 using EduFlow.Infrastructure.Multitenancy;
+using EduFlow.Infrastructure.Notifications;
 using EduFlow.Infrastructure.Repository;
 using EduFlow.Infrastructure.Security;
+using EduFlow.Infrastructure.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -44,14 +49,22 @@ public static class DependencyInjection
             {
                 options.Password.RequiredLength = 8;
                 options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedEmail = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Lockout.AllowedForNewUsers = true;
             })
             .AddRoles<ApplicationRole>()
+            .AddSignInManager()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.Configure<ClientAppOptions>(configuration.GetSection(ClientAppOptions.SectionName));
         services.AddScoped<JwtTokenService>();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<ISystemSettingsService, SystemSettingsService>();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();

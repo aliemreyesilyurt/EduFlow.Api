@@ -41,15 +41,31 @@ KVKK/GDPR kapsamında açık rıza ve veri saklama politikası gerektirir — bu
       ayrıca `StudentOnly` (sadece öğrenci rolüyle anlamlı aksiyonlar) ve `Authenticated`
       (rol gerektirmeyen ama oturum isteyen endpoint'ler) eklendi
 
-## Faz 1 — Auth & Tenant Onboarding Sağlamlaştırma *(Backend)*
-**Amaç:** Mevcut auth akışını production'a hazır hale getirmek.
+## Faz 1 — Auth & Tenant Onboarding Sağlamlaştırma *(Backend)* ✅
 
-- [ ] Email doğrulama akışı (kayıt sonrası)
-- [ ] "Şifremi unuttum" / şifre sıfırlama akışı
-- [ ] Refresh token rotation ve "tüm cihazlardan çıkış yap"
-- [ ] Login'de rate limiting / brute-force koruması
-- [ ] `InviteInstructor` akışının uçtan uca doğrulanması (davet e-postası, kabul akışı)
-- [ ] Rol bazlı yetkilendirme policy'lerinin endpoint'lere uygulanması
+- [x] Email doğrulama akışı (kayıt sonrası) — `IEmailSender` soyutlaması eklendi; gövdeler
+      `{{Token}}` yer tutuculu HTML şablonlarından (ortak layout) render ediliyor, gönderim
+      MailKit ile SMTP üzerinden yapılıyor (ayarlar `SystemSettings`'ten okunuyor, host boşsa
+      log'a düşüyor — bkz. aşağıdaki not). Identity'de
+      `RequireConfirmedEmail = true`; `RegisterTenant`/`RegisterStudent` artık otomatik login
+      yapmıyor, sadece kimlik döndürüp doğrulama e-postası gönderiyor (`ConfirmEmail`,
+      `ResendConfirmationEmail` endpoint'leri eklendi)
+- [x] "Şifremi unuttum" / şifre sıfırlama akışı — `ForgotPassword`/`ResetPassword` endpoint'leri;
+      hesap enumeration'a karşı var olmayan e-postada da 204 dönülüyor; şifre değişince
+      kullanıcının tüm refresh token'ları iptal ediliyor
+- [x] Refresh token rotation ve "tüm cihazlardan çıkış yap" — `RefreshToken`'a FK/unique index
+      eklendi, rotasyon zinciri `ReplacedByTokenId` ile izleniyor; iptal edilmiş bir token tekrar
+      kullanılırsa (reuse detection) kullanıcının tüm token'ları iptal ediliyor; yeni
+      `POST auth/logout-all` endpoint'i tüm cihazlardan çıkışı sağlıyor
+- [x] Login'de rate limiting / brute-force koruması — ASP.NET Core rate limiter (IP bazlı,
+      anonim auth endpoint'lerinde) + Identity lockout (5 hatalı denemede 15 dakika kilit)
+- [x] `InviteInstructor` akışının uçtan uca doğrulanması (davet e-postası, kabul akışı) —
+      TenantAdmin artık sadece e-posta/isim giriyor, şifresiz kullanıcı + davet token'ı
+      üretiliyor, e-posta gönderiliyor; eğitmen `POST auth/invitations/accept` ile kendi
+      şifresini belirleyip daveti kabul ediyor
+- [x] Rol bazlı yetkilendirme policy'lerinin endpoint'lere uygulanması — her auth endpoint'i
+      açıkça `AllowAnonymous` ya da uygun `PolicyNames` politikasını taşıyor; hata→HTTP durum kodu
+      eşlemesi `Error.ToHttpResult()` ile merkezileştirildi
 
 ## Faz 2 — Çekirdek Kurs Domain'i: Course + Step *(Backend)*
 **Amaç:** Tek aşamalı ya da çok adımlı (step-by-step) kursların temelini kurmak.

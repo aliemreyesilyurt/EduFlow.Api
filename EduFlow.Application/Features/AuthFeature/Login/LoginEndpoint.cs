@@ -2,7 +2,6 @@ using EduFlow.Application.Abstractions;
 using EduFlow.Application.Constants;
 using EduFlow.Application.Extensions;
 using EduFlow.Domain.Abstractions;
-using EduFlow.Domain.Abstractions.Errors;
 
 namespace EduFlow.Application.Features.AuthFeature.Login;
 
@@ -18,14 +17,14 @@ internal sealed class LoginEndpoint : IApiEndpoint
                 var result = await handler.HandleAsync(command, cancellationToken);
                 return result.Match(
                     onSuccess: () => Results.Ok(result.Value),
-                    onFailure: error => error.Type == ErrorType.Unauthorized
-                        ? Results.Unauthorized()
-                        : Results.BadRequest(error));
+                    onFailure: error => error.ToHttpResult());
             })
             .WithTags(ApiTags.Auth)
             .AllowAnonymous()
+            .RequireRateLimiting(RateLimitPolicies.Auth)
             .Produces<LoginResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status400BadRequest);
     }
 }

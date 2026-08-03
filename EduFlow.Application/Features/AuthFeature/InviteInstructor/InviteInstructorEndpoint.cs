@@ -17,7 +17,7 @@ internal sealed class InviteInstructorEndpoint : IApiEndpoint
                 var result = await handler.HandleAsync(command, cancellationToken);
                 return result.Match(
                     onSuccess: () => Results.Ok(result.Value),
-                    onFailure: error => Results.BadRequest(error));
+                    onFailure: error => error.ToHttpResult());
             })
             .WithTags(ApiTags.Auth)
             .RequireAuthorization(PolicyNames.TenantAdminOrAbove)
