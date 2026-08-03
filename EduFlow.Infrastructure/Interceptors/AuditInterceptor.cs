@@ -1,10 +1,11 @@
-﻿using EduFlow.Domain.Entities;
+using EduFlow.Application.Abstractions;
+using EduFlow.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace EduFlow.Infrastructure.Interceptors;
 
-public class AuditInterceptor : SaveChangesInterceptor
+public sealed class AuditInterceptor(ITenantContext tenantContext) : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(
         DbContextEventData eventData,
@@ -25,22 +26,24 @@ public class AuditInterceptor : SaveChangesInterceptor
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    private static void ApplyAuditInfo(DbContext? context)
+    private void ApplyAuditInfo(DbContext? context)
     {
         if (context == null)
             return;
 
         foreach (var entry in context.ChangeTracker
-                                     .Entries<AuditableEntity>())
+                                     .Entries<BaseEntity>())
         {
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedOn = DateTime.UtcNow;
+                entry.Entity.CreatedBy = tenantContext.UserId;
             }
 
             if (entry.State == EntityState.Modified)
             {
                 entry.Entity.UpdatedOn = DateTime.UtcNow;
+                entry.Entity.UpdatedBy = tenantContext.UserId;
             }
         }
     }
