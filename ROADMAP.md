@@ -8,8 +8,8 @@ eder, yorum/puan bırakır, kurs sonunda sınava girer ve başarılı olursa sis
 
 **Mevcut durum:** Multi-tenant altyapı, kimlik doğrulama (login/logout/refresh/tenant & öğrenci
 kaydı/eğitmen daveti) ve rol yapısı (SysAdmin, TenantAdmin, Instructor, Student) hazır. `Course`
-ve `Step` üzerinde tam CRUD + yayınlama/sıralama akışı çalışıyor; sırada öğrenci kaydı
-(Enrollment) var.
+ve `Step` üzerinde tam CRUD + yayınlama/sıralama akışı çalışıyor; öğrenci kaydı (Enrollment) ve
+adım ilerlemesi (StepProgress) de eklendi; sırada yorum/değerlendirme (Faz 4) var.
 
 **Öncelik sırası:** Önce auth akışını sağlamlaştırıp Course/Enrollment temelini kurmak (backend
 ağırlıklı), ardından frontend'i bu API'lerin üzerine inşa etmek, sonra sınav/puan/bütünlük
@@ -90,14 +90,22 @@ KVKK/GDPR kapsamında açık rıza ve veri saklama politikası gerektirir — bu
       query filter'ı ile otomatik; ayrıca taslak/arşiv kurslar sadece sahibi/TenantAdmin/SysAdmin
       tarafından görülebiliyor, yayınlanan kurslar herkese açık (`CourseAccess.CanView`)
 
-## Faz 3 — Enrollment & Öğrenme İlerlemesi *(Backend)*
+## Faz 3 — Enrollment & Öğrenme İlerlemesi *(Backend)* ✅
 **Amaç:** Öğrencinin bir kursa kaydolup ilerlemesini takip edebilmesi.
-*(Not: `Enrollment`/`StepProgress` entity'leri ve şema Faz 0'da hazırlandı; bu fazda CRUD/endpoint katmanı yazılacak.)*
+*(Not: `Enrollment`/`StepProgress` entity'leri ve şema Faz 0'da hazırlandı; bu fazda CRUD/endpoint katmanı yazıldı.)*
 
-- [ ] `Enrollment` entity (Student ↔ Course)
-- [ ] `EnrollInCourse` / `Unenroll` endpoint'leri
-- [ ] `StepProgress`: adım tamamlama takibi, kurs geneli ilerleme yüzdesi
-- [ ] "Kurslarım" (öğrenci) ve "Kayıtlı Öğrenciler" (eğitmen) endpoint'leri
+- [x] `Enrollment` entity (Student ↔ Course) — Faz 0'da eklenen entity/şema kullanıldı
+- [x] `EnrollInCourse` / `Unenroll` endpoint'leri — `EnrollmentFeature` altında
+      `POST courses/{courseId}/enroll` ve `DELETE courses/{courseId}/enroll`; yalnızca yayınlanan
+      kurslara kayıt olunabiliyor, aynı kursa iki kez kayıt engelleniyor (`EnrollmentErrors`)
+- [x] `StepProgress`: adım tamamlama takibi, kurs geneli ilerleme yüzdesi —
+      `POST steps/{stepId}/complete` öğrencinin kaydı (enrollment) üzerinden tamamlama kaydı
+      oluşturuyor (idempotent), tamamlanan/toplam adım sayısından ilerleme yüzdesini hesaplıyor;
+      tüm adımlar bitince `Enrollment.CompletedOn` otomatik set ediliyor
+- [x] "Kurslarım" (öğrenci) ve "Kayıtlı Öğrenciler" (eğitmen) endpoint'leri —
+      `GET students/me/courses` (öğrencinin kendi kayıtları + ilerleme yüzdesi) ve
+      `GET courses/{courseId}/students` (kursun sahibi eğitmen veya TenantAdmin/SysAdmin için
+      kayıtlı öğrenci listesi + ilerleme), `CourseAccess.CanManage` ile yetkilendirildi
 
 ## Faz 4 — Yorum & Değerlendirme *(Backend)*
 **Amaç:** Her adıma ve kursun geneline geri bildirim verilebilmesi.
