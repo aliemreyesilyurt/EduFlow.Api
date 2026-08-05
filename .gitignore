@@ -456,3 +456,6 @@ $RECYCLE.BIN/
 
 # Internal docs (not published on GitHub)
 ROADMAP.md
+
+# Local docker env overrides
+.env

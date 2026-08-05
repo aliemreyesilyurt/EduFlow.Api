@@ -6,10 +6,13 @@ namespace EduFlow.WebApi.Extensions;
 
 public static class HealthChecksExtensions
 {
-    public static IServiceCollection AddHealthChecksConfiguration(this IServiceCollection services)
+    public static IServiceCollection AddHealthChecksConfiguration(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
         services.AddHealthChecks()
-            .AddDbContextCheck<ApplicationDbContext>();
+            .AddDbContextCheck<ApplicationDbContext>()
+            .AddRedis(configuration.GetConnectionString("redis")!, name: "redis");
         return services;
     }
 

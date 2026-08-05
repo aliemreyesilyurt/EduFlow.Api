@@ -23,7 +23,7 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddHealthChecksConfiguration();
+builder.Services.AddHealthChecksConfiguration(builder.Configuration);
 
 var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
 var jwtOptions = jwtSection.Get<JwtOptions>()
