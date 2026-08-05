@@ -2,14 +2,44 @@ services:
   postgres:
     image: postgres:17
     container_name: eduflow-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: EduFlow
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-EduFlow}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - eduflow-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-EduFlow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - eduflow-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: eduflow-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-redis}"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - eduflow-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - eduflow-network
+
+networks:
+  eduflow-network:
+    name: eduflow-network
 
 volumes:
   eduflow-postgres-data:
+  eduflow-redis-data:

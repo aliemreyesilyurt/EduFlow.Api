@@ -1,5 +1,6 @@
 using System.Threading.Channels;
 using EduFlow.Application.Abstractions;
+using EduFlow.Application.Abstractions.Caching;
 using EduFlow.Application.Abstractions.Data;
 using EduFlow.Application.Abstractions.Identity;
 using EduFlow.Application.Abstractions.Notifications;
@@ -7,6 +8,7 @@ using EduFlow.Application.Abstractions.Security;
 using EduFlow.Application.Abstractions.Settings;
 using EduFlow.Application.Options;
 using EduFlow.Infrastructure.Authentication;
+using EduFlow.Infrastructure.Caching;
 using EduFlow.Infrastructure.Database;
 using EduFlow.Infrastructure.Identity;
 using EduFlow.Infrastructure.Interceptors;
@@ -21,6 +23,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace EduFlow.Infrastructure;
 
@@ -94,6 +97,16 @@ public static class DependencyInjection
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        var redisConnection = configuration.GetConnectionString("redis");
+        services.AddSingleton<IConnectionMultiplexer>(
+            _ => ConnectionMultiplexer.Connect(redisConnection!));
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnection;
+            options.InstanceName = "EduFlow:";
+        });
+        services.AddSingleton<ICacheService, RedisCacheService>();
 
         return services;
     }
