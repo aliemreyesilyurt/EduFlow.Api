@@ -12,4 +12,7 @@ public static class StepErrors
 
     public static readonly Error ReorderMismatch =
         Error.Validation("Steps.ReorderMismatch", "The provided step ids must exactly match the course's current steps");
+
+    public static readonly Error ContentTypeMismatch =
+        Error.Validation("Steps.ContentTypeMismatch", "The uploaded file does not match the step's content type");
 }

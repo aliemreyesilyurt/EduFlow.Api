@@ -12,4 +12,7 @@ public static class CourseErrors
 
     public static readonly Error AlreadyPublished =
         Error.Conflict("Courses.AlreadyPublished", "The course is already published");
+
+    public static readonly Error AlreadyArchived =
+        Error.Conflict("Courses.AlreadyArchived", "The course is already archived");
 }

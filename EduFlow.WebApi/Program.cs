@@ -18,6 +18,12 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// IFormFile binding for minimal APIs happens before the endpoint delegate runs, so the
+// per-endpoint IHttpMaxRequestBodySizeFeature override is too late for upload endpoints;
+// the limit has to be raised globally on Kestrel instead.
+builder.WebHost.ConfigureKestrel(o =>
+    o.Limits.MaxRequestBodySize = builder.Configuration.GetValue<long>("Storage:MaxFileSizeBytes"));
+
 // Add services to the container.
 builder.Services.AddOpenApi();
 

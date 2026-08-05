@@ -225,6 +225,9 @@ _pkginfo.txt
 *.appxbundle
 *.appxupload
 
+# Locally uploaded step content (Faz 7 local disk storage)
+EduFlow.WebApi/App_Data/
+
 # Visual Studio cache files
 # files ending in .cache can be ignored
 *.[Cc]ache

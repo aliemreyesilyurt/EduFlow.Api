@@ -1,6 +1,7 @@
 ﻿using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using EduFlow.Infrastructure.Database;
+using EduFlow.WebApi.HealthChecks;
 
 namespace EduFlow.WebApi.Extensions;
 
@@ -12,7 +13,8 @@ public static class HealthChecksExtensions
     {
         services.AddHealthChecks()
             .AddDbContextCheck<ApplicationDbContext>()
-            .AddRedis(configuration.GetConnectionString("redis")!, name: "redis");
+            .AddRedis(configuration.GetConnectionString("redis")!, name: "redis")
+            .AddCheck<LocalStorageHealthCheck>("storage");
         return services;
     }
 

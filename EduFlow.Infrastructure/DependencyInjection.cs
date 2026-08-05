@@ -6,6 +6,7 @@ using EduFlow.Application.Abstractions.Identity;
 using EduFlow.Application.Abstractions.Notifications;
 using EduFlow.Application.Abstractions.Security;
 using EduFlow.Application.Abstractions.Settings;
+using EduFlow.Application.Abstractions.Storage;
 using EduFlow.Application.Options;
 using EduFlow.Infrastructure.Authentication;
 using EduFlow.Infrastructure.Caching;
@@ -18,6 +19,7 @@ using EduFlow.Infrastructure.Notifications;
 using EduFlow.Infrastructure.Repository;
 using EduFlow.Infrastructure.Security;
 using EduFlow.Infrastructure.Settings;
+using EduFlow.Infrastructure.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -107,6 +109,9 @@ public static class DependencyInjection
             options.InstanceName = "EduFlow:";
         });
         services.AddSingleton<ICacheService, RedisCacheService>();
+
+        services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
 
         return services;
     }
