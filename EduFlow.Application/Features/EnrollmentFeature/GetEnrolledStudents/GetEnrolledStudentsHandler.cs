@@ -2,6 +2,7 @@ namespace EduFlow.Application.Features.EnrollmentFeature.GetEnrolledStudents;
 
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
+using EduFlow.Application.Abstractions.Identity;
 using EduFlow.Application.Features.CourseFeature;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
@@ -11,6 +12,7 @@ public sealed record GetEnrolledStudentsRequest(Guid CourseId);
 public sealed record EnrolledStudentSummary(
     Guid EnrollmentId,
     Guid StudentId,
+    string StudentName,
     DateTime EnrolledOn,
     DateTime? CompletedOn,
     int TotalSteps,
@@ -24,6 +26,7 @@ public sealed class GetEnrolledStudentsHandler(
     IRepository<Enrollment> enrollmentRepository,
     IRepository<Step> stepRepository,
     IRepository<StepProgress> stepProgressRepository,
+    IIdentityService identityService,
     ITenantContext tenantContext) : IHandler<GetEnrolledStudentsRequest, Result<GetEnrolledStudentsResponse>>
 {
     public async Task<Result<GetEnrolledStudentsResponse>> HandleAsync(GetEnrolledStudentsRequest command, CancellationToken cancellationToken)
@@ -51,6 +54,9 @@ public sealed class GetEnrolledStudentsHandler(
             .GroupBy(sp => sp.EnrollmentId)
             .ToDictionary(g => g.Key, g => g.Count());
 
+        var studentNames = await identityService.GetDisplayNamesAsync(
+            enrollments.Select(e => e.StudentId), cancellationToken);
+
         var summaries = enrollments
             .OrderByDescending(e => e.EnrolledOn)
             .Select(e =>
@@ -59,7 +65,8 @@ public sealed class GetEnrolledStudentsHandler(
                 var progress = totalSteps == 0 ? 0d : Math.Round(100.0 * completedSteps / totalSteps, 2);
 
                 return new EnrolledStudentSummary(
-                    e.Id, e.StudentId, e.EnrolledOn, e.CompletedOn, totalSteps, completedSteps, progress);
+                    e.Id, e.StudentId, studentNames.GetValueOrDefault(e.StudentId, "Unknown"),
+                    e.EnrolledOn, e.CompletedOn, totalSteps, completedSteps, progress);
             })
             .ToList();
 

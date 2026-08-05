@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,29 @@ builder.WebHost.ConfigureKestrel(o =>
     o.Limits.MaxRequestBodySize = builder.Configuration.GetValue<long>("Storage:MaxFileSizeBytes"));
 
 // Add services to the container.
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header
+        };
+
+        document.Security ??= [];
+        document.Security.Add(new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document, null)] = []
+        });
+
+        return Task.CompletedTask;
+    });
+});
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -126,6 +149,7 @@ app.MapScalarApiReference(options =>
     options.WithDefaultHttpClient(
         ScalarTarget.CSharp,
         ScalarClient.HttpClient);
+    options.AddPreferredSecuritySchemes("Bearer");
 });
 
 app.Run();
