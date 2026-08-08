@@ -34,6 +34,11 @@ public class ApplicationDbContext(
     public DbSet<Comment> Comments { get; set; } = null!;
     public DbSet<Rating> Ratings { get; set; } = null!;
     public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
+    public DbSet<Exam> Exams { get; set; } = null!;
+    public DbSet<Question> Questions { get; set; } = null!;
+    public DbSet<QuestionOption> QuestionOptions { get; set; } = null!;
+    public DbSet<ExamAttempt> ExamAttempts { get; set; } = null!;
+    public DbSet<ExamAnswer> ExamAnswers { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

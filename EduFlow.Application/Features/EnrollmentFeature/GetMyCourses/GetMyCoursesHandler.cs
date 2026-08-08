@@ -17,7 +17,8 @@ public sealed record MyCourseSummary(
     DateTime? CompletedOn,
     int TotalSteps,
     int CompletedSteps,
-    double ProgressPercentage);
+    double ProgressPercentage,
+    Guid? ExamId);
 
 public sealed record GetMyCoursesResponse(IReadOnlyList<MyCourseSummary> Courses);
 
@@ -26,6 +27,7 @@ public sealed class GetMyCoursesHandler(
     IRepository<Course> courseRepository,
     IRepository<Step> stepRepository,
     IRepository<StepProgress> stepProgressRepository,
+    IRepository<Exam> examRepository,
     ITenantContext tenantContext) : IHandler<GetMyCoursesRequest, Result<GetMyCoursesResponse>>
 {
     public async Task<Result<GetMyCoursesResponse>> HandleAsync(GetMyCoursesRequest command, CancellationToken cancellationToken)
@@ -50,6 +52,10 @@ public sealed class GetMyCoursesHandler(
             .GroupBy(sp => sp.EnrollmentId)
             .ToDictionary(g => g.Key, g => g.Count());
 
+        var publishedExamIdsByCourse = (await examRepository.GetAllAsync(cancellationToken))
+            .Where(e => e.IsPublished)
+            .ToDictionary(e => e.CourseId, e => (Guid?)e.Id);
+
         var summaries = enrollments
             .Where(e => courses.ContainsKey(e.CourseId))
             .OrderByDescending(e => e.EnrolledOn)
@@ -62,7 +68,7 @@ public sealed class GetMyCoursesHandler(
 
                 return new MyCourseSummary(
                     e.Id, e.CourseId, course.Title, course.Status, e.EnrolledOn, e.CompletedOn,
-                    totalSteps, completedSteps, progress);
+                    totalSteps, completedSteps, progress, publishedExamIdsByCourse.GetValueOrDefault(e.CourseId));
             })
             .ToList();
 

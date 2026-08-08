@@ -19,12 +19,14 @@ public sealed record GetCourseByIdResponse(
     DateTime? PublishedOn,
     double? AverageRating,
     int RatingCount,
-    int CommentCount);
+    int CommentCount,
+    Guid? ExamId);
 
 public sealed class GetCourseByIdHandler(
     IRepository<Course> courseRepository,
     IRepository<Rating> ratingRepository,
     IRepository<Comment> commentRepository,
+    IRepository<Exam> examRepository,
     IIdentityService identityService,
     ITenantContext tenantContext) : IHandler<GetCourseByIdRequest, Result<GetCourseByIdResponse>>
 {
@@ -48,10 +50,12 @@ public sealed class GetCourseByIdHandler(
 
         var instructorNames = await identityService.GetDisplayNamesAsync([course.InstructorId], cancellationToken);
 
+        var exam = await examRepository.FindAsync(e => e.CourseId == course.Id && e.IsPublished, cancellationToken);
+
         return Result.Success(new GetCourseByIdResponse(
             course.Id, course.Title, course.Description, course.InstructorId,
             instructorNames.GetValueOrDefault(course.InstructorId, "Unknown"),
             course.Status, course.PublishedOn,
-            averageRating, ratings.Count, commentCount));
+            averageRating, ratings.Count, commentCount, exam?.Id));
     }
 }
