@@ -19,7 +19,8 @@ public sealed record CourseSummary(
     DateTime? PublishedOn,
     double? AverageRating,
     int RatingCount,
-    int CommentCount);
+    int CommentCount,
+    Guid? ExamId);
 
 public sealed record GetAllCoursesResponse(IReadOnlyList<CourseSummary> Courses);
 
@@ -27,6 +28,7 @@ public sealed class GetAllCoursesHandler(
     IRepository<Course> courseRepository,
     IRepository<Rating> ratingRepository,
     IRepository<Comment> commentRepository,
+    IRepository<Exam> examRepository,
     IIdentityService identityService,
     ITenantContext tenantContext) : IHandler<GetAllCoursesRequest, Result<GetAllCoursesResponse>>
 {
@@ -42,6 +44,10 @@ public sealed class GetAllCoursesHandler(
             .Where(c => !c.IsHidden)
             .GroupBy(c => c.CourseId)
             .ToDictionary(g => g.Key, g => g.Count());
+
+        var publishedExamIdsByCourse = (await examRepository.GetAllAsync(cancellationToken))
+            .Where(e => e.IsPublished)
+            .ToDictionary(e => e.CourseId, e => (Guid?)e.Id);
 
         var visibleCourses = courses
             .Where(c => CourseAccess.CanView(c, tenantContext))
@@ -63,7 +69,8 @@ public sealed class GetAllCoursesHandler(
                     c.Id, c.Title, c.Description, c.InstructorId,
                     instructorNames.GetValueOrDefault(c.InstructorId, "Unknown"),
                     c.Status, c.PublishedOn,
-                    averageRating, ratings?.Count ?? 0, commentCountsByCourse.GetValueOrDefault(c.Id));
+                    averageRating, ratings?.Count ?? 0, commentCountsByCourse.GetValueOrDefault(c.Id),
+                    publishedExamIdsByCourse.GetValueOrDefault(c.Id));
             })
             .ToList();
 
