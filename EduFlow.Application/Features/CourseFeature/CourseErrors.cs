@@ -10,6 +10,9 @@ public static class CourseErrors
     public static readonly Error Forbidden =
         Error.Forbidden("Courses.Forbidden", "You do not have permission to manage this course");
 
+    public static readonly Error TenantRequired =
+        Error.Forbidden("Courses.TenantRequired", "This account is not associated with a tenant, so it cannot create courses");
+
     public static readonly Error AlreadyPublished =
         Error.Conflict("Courses.AlreadyPublished", "The course is already published");
 

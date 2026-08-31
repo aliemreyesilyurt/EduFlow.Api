@@ -34,6 +34,11 @@ public sealed class RegisterStudentHandler(
             return AuthErrors.TenantNotFound;
         }
 
+        if (!tenant.AllowSelfRegistration)
+        {
+            return AuthErrors.SelfRegistrationDisabled;
+        }
+
         var createUserResult = await identityService.CreateUserAsync(
             new CreateUserRequest(
                 command.Email,

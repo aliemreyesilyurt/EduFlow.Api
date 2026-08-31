@@ -22,7 +22,12 @@ public sealed class CreateCourseHandler(
 {
     public async Task<Result<CreateCourseResponse>> HandleAsync(CreateCourseRequest command, CancellationToken cancellationToken)
     {
-        if (tenantContext.TenantId is null || tenantContext.UserId is not { } instructorId)
+        if (tenantContext.TenantId is null)
+        {
+            return CourseErrors.TenantRequired;
+        }
+
+        if (tenantContext.UserId is not { } instructorId)
         {
             return CourseErrors.Forbidden;
         }

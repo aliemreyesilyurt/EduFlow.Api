@@ -16,6 +16,7 @@ public interface IIdentityService
 
     Task<Result<UserTokenResult>> GeneratePasswordResetTokenAsync(string email, CancellationToken cancellationToken);
     Task<Result> ResetPasswordAsync(Guid userId, string token, string newPassword, CancellationToken cancellationToken);
+    Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken);
 
     Task<Result<UserTokenResult>> GenerateInvitationTokenAsync(Guid userId, CancellationToken cancellationToken);
     Task<Result<AuthTokens>> AcceptInvitationAsync(Guid userId, string token, string password, CancellationToken cancellationToken);
@@ -30,7 +31,9 @@ public sealed record CreateUserRequest(
     string LastName,
     string? NationalId,
     Guid? TenantId,
-    string Role);
+    string Role,
+    bool EmailConfirmed = false,
+    bool MustChangePassword = false);
 
 public sealed record CreateInvitedUserRequest(
     string Email,
@@ -39,6 +42,6 @@ public sealed record CreateInvitedUserRequest(
     Guid TenantId,
     string Role);
 
-public sealed record AuthTokens(string AccessToken, string RefreshToken, DateTime AccessTokenExpiresOn);
+public sealed record AuthTokens(string AccessToken, string RefreshToken, DateTime AccessTokenExpiresOn, bool RequiresPasswordChange);
 
 public sealed record UserTokenResult(Guid UserId, string Email, string FirstName, string Token, Guid? TenantId);

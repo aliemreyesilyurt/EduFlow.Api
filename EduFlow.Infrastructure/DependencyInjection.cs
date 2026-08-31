@@ -92,6 +92,7 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<ClientAppOptions>(configuration.GetSection(ClientAppOptions.SectionName));
+        services.Configure<TenantProvisioningOptions>(configuration.GetSection(TenantProvisioningOptions.SectionName));
         services.AddScoped<JwtTokenService>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<ISystemSettingsService, SystemSettingsService>();
