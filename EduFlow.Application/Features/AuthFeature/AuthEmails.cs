@@ -42,4 +42,17 @@ internal static class AuthEmails
             new Dictionary<string, string> { ["FirstName"] = firstName, ["ActionUrl"] = link },
             tenantId);
     }
+
+    public static EmailRequest StudentInvitation(
+        string clientBaseUrl, string to, string firstName, Guid userId, string encodedToken, Guid? tenantId)
+    {
+        var link = $"{clientBaseUrl}/accept-invitation?userId={userId}&token={encodedToken}";
+
+        return new EmailRequest(
+            to,
+            "You've been invited to EduFlow as a student",
+            EmailTemplate.StudentInvitation,
+            new Dictionary<string, string> { ["FirstName"] = firstName, ["ActionUrl"] = link },
+            tenantId);
+    }
 }

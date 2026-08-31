@@ -6,7 +6,11 @@ using EduFlow.Domain.Abstractions;
 
 public sealed record RefreshTokenRequest(string RefreshToken);
 
-public sealed record RefreshTokenResponse(string AccessToken, string RefreshToken, DateTime AccessTokenExpiresOn);
+public sealed record RefreshTokenResponse(
+    string AccessToken,
+    string RefreshToken,
+    DateTime AccessTokenExpiresOn,
+    bool RequiresPasswordChange);
 
 public sealed class RefreshTokenHandler(IIdentityService identityService)
     : IHandler<RefreshTokenRequest, Result<RefreshTokenResponse>>
@@ -22,6 +26,7 @@ public sealed class RefreshTokenHandler(IIdentityService identityService)
 
         var tokens = result.Value;
 
-        return Result.Success(new RefreshTokenResponse(tokens.AccessToken, tokens.RefreshToken, tokens.AccessTokenExpiresOn));
+        return Result.Success(new RefreshTokenResponse(
+            tokens.AccessToken, tokens.RefreshToken, tokens.AccessTokenExpiresOn, tokens.RequiresPasswordChange));
     }
 }

@@ -9,7 +9,8 @@ public enum EmailTemplate
 {
     EmailVerification,
     PasswordReset,
-    InstructorInvitation
+    InstructorInvitation,
+    StudentInvitation
 }
 
 /// <summary>

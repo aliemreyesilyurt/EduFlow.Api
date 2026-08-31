@@ -12,4 +12,6 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     public string? NationalId { get; set; }
 
     public DateTime CreatedOn { get; set; }
+
+    public bool MustChangePassword { get; set; }
 }

@@ -10,4 +10,5 @@ public static class ApiTags
     public const string Ratings = "ratings";
     public const string SystemSettings = "system-settings";
     public const string Exams = "exams";
+    public const string Tenants = "tenants";
 }

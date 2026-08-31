@@ -9,5 +9,6 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
     public void Configure(EntityTypeBuilder<Tenant> builder)
     {
         builder.HasIndex(t => t.Slug).IsUnique();
+        builder.Property(t => t.AllowSelfRegistration).HasDefaultValue(false);
     }
 }

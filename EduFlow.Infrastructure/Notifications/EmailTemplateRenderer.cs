@@ -16,7 +16,8 @@ internal static class EmailTemplateRenderer
     {
         [EmailTemplate.EmailVerification] = "email-verification.html",
         [EmailTemplate.PasswordReset] = "password-reset.html",
-        [EmailTemplate.InstructorInvitation] = "instructor-invitation.html"
+        [EmailTemplate.InstructorInvitation] = "instructor-invitation.html",
+        [EmailTemplate.StudentInvitation] = "student-invitation.html"
     };
 
     public static string Render(EmailTemplate template, string subject, IReadOnlyDictionary<string, string> tokens)

@@ -25,11 +25,13 @@ internal sealed class IdentityService(
             Id = Guid.CreateVersion7(),
             UserName = request.Email,
             Email = request.Email,
+            EmailConfirmed = request.EmailConfirmed,
             FirstName = request.FirstName,
             LastName = request.LastName,
             NationalId = request.NationalId,
             TenantId = request.TenantId,
-            CreatedOn = DateTime.UtcNow
+            CreatedOn = DateTime.UtcNow,
+            MustChangePassword = request.MustChangePassword
         };
 
         var createResult = await userManager.CreateAsync(user, request.Password);
@@ -40,7 +42,13 @@ internal sealed class IdentityService(
             return AuthErrors.UserCreationFailed(description);
         }
 
-        await userManager.AddToRoleAsync(user, request.Role);
+        var addToRoleResult = await userManager.AddToRoleAsync(user, request.Role);
+
+        if (!addToRoleResult.Succeeded)
+        {
+            var description = string.Join("; ", addToRoleResult.Errors.Select(e => e.Description));
+            return AuthErrors.UserAddToRoleFailed(description);
+        }
 
         return Result.Success(user.Id);
     }
@@ -139,7 +147,7 @@ internal sealed class IdentityService(
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new AuthTokens(accessToken, rawNewToken, expiresOn));
+        return Result.Success(new AuthTokens(accessToken, rawNewToken, expiresOn, user.MustChangePassword));
     }
 
     public async Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken)
@@ -224,6 +232,29 @@ internal sealed class IdentityService(
         return Result.Success();
     }
 
+    public async Task<Result> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword, CancellationToken cancellationToken)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString());
+
+        if (user is null)
+        {
+            return AuthErrors.UserNotFound;
+        }
+
+        var result = await userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+
+        if (!result.Succeeded)
+        {
+            var description = string.Join("; ", result.Errors.Select(e => e.Description));
+            return AuthErrors.PasswordChangeFailed(description);
+        }
+
+        user.MustChangePassword = false;
+        await userManager.UpdateAsync(user);
+
+        return Result.Success();
+    }
+
     public async Task<Result<UserTokenResult>> GenerateInvitationTokenAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByIdAsync(userId.ToString());
@@ -286,7 +317,7 @@ internal sealed class IdentityService(
         dbContext.RefreshTokens.Add(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new AuthTokens(accessToken, rawToken, expiresOn));
+        return Result.Success(new AuthTokens(accessToken, rawToken, expiresOn, user.MustChangePassword));
     }
 
     private async Task<(string AccessToken, DateTime ExpiresOn, RefreshToken Entity, string RawToken)> BuildTokensAsync(ApplicationUser user)

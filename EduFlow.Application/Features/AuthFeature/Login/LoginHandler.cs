@@ -6,7 +6,11 @@ using EduFlow.Domain.Abstractions;
 
 public sealed record LoginRequest(string Email, string Password);
 
-public sealed record LoginResponse(string AccessToken, string RefreshToken, DateTime AccessTokenExpiresOn);
+public sealed record LoginResponse(
+    string AccessToken,
+    string RefreshToken,
+    DateTime AccessTokenExpiresOn,
+    bool RequiresPasswordChange);
 
 public sealed class LoginHandler(IIdentityService identityService) : IHandler<LoginRequest, Result<LoginResponse>>
 {
@@ -21,6 +25,7 @@ public sealed class LoginHandler(IIdentityService identityService) : IHandler<Lo
 
         var tokens = result.Value;
 
-        return Result.Success(new LoginResponse(tokens.AccessToken, tokens.RefreshToken, tokens.AccessTokenExpiresOn));
+        return Result.Success(new LoginResponse(
+            tokens.AccessToken, tokens.RefreshToken, tokens.AccessTokenExpiresOn, tokens.RequiresPasswordChange));
     }
 }
