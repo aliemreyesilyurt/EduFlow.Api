@@ -218,6 +218,15 @@ namespace EduFlow.Infrastructure.Migrations
                     b.Property<int>("PassScorePercentage")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("ProctoringEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireCamera")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("SnapshotIntervalSeconds")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
@@ -233,6 +242,9 @@ namespace EduFlow.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedOn")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ViolationWarningThreshold")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -321,6 +333,24 @@ namespace EduFlow.Infrastructure.Migrations
                     b.Property<bool?>("Passed")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("ProctoringConsentOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("RequiresReview")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("ReviewApproved")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ReviewNote")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ReviewedOn")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<double?>("ScorePercentage")
                         .HasColumnType("double precision");
 
@@ -342,6 +372,9 @@ namespace EduFlow.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedOn")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("ViolationCount")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("StudentId");
@@ -349,6 +382,109 @@ namespace EduFlow.Infrastructure.Migrations
                     b.HasIndex("ExamId", "StudentId");
 
                     b.ToTable("ExamAttempts");
+                });
+
+            modelBuilder.Entity("EduFlow.Domain.Entities.ProctoringEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ExamAttemptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("OccurredOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamAttemptId", "OccurredOn");
+
+                    b.ToTable("ProctoringEvents");
+                });
+
+            modelBuilder.Entity("EduFlow.Domain.Entities.ProctoringSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CapturedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ExamAttemptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamAttemptId", "CapturedOn");
+
+                    b.ToTable("ProctoringSnapshots");
                 });
 
             modelBuilder.Entity("EduFlow.Domain.Entities.Question", b =>
@@ -696,6 +832,14 @@ namespace EduFlow.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("ProctoringConsentText")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ProctoringRetentionDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(30);
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -1046,6 +1190,24 @@ namespace EduFlow.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EduFlow.Domain.Entities.ProctoringEvent", b =>
+                {
+                    b.HasOne("EduFlow.Domain.Entities.ExamAttempt", null)
+                        .WithMany()
+                        .HasForeignKey("ExamAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("EduFlow.Domain.Entities.ProctoringSnapshot", b =>
+                {
+                    b.HasOne("EduFlow.Domain.Entities.ExamAttempt", null)
+                        .WithMany()
+                        .HasForeignKey("ExamAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

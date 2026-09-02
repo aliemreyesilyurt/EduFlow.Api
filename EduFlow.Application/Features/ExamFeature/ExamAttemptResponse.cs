@@ -17,4 +17,9 @@ public sealed record ExamAttemptResponse(
     double? ScorePercentage,
     int? PassScorePercentage,
     bool? Passed,
+    int ViolationCount,
+    bool RequiresReview,
+    bool? ReviewApproved,
+    DateTime? ReviewedOn,
+    string? ReviewNote,
     IReadOnlyList<ExamAnswerResult>? Answers);

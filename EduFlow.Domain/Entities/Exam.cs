@@ -11,4 +11,8 @@ public sealed class Exam : BaseEntity, ITenantEntity
     public int? TimeLimitMinutes { get; set; }
     public int? MaxAttempts { get; set; }
     public bool IsPublished { get; set; }
+    public bool ProctoringEnabled { get; set; }
+    public bool RequireCamera { get; set; }
+    public int? SnapshotIntervalSeconds { get; set; }
+    public int? ViolationWarningThreshold { get; set; }
 }

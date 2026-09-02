@@ -46,7 +46,9 @@ public sealed class GetExamAttemptHandler(
         {
             return Result.Success(new ExamAttemptResponse(
                 attempt.Id, attempt.ExamId, attempt.AttemptNumber, attempt.StartedOn, exam.TimeLimitMinutes,
-                null, null, null, null, null));
+                null, null, null, null,
+                attempt.ViolationCount, attempt.RequiresReview, attempt.ReviewApproved, attempt.ReviewedOn, attempt.ReviewNote,
+                null));
         }
 
         var questions = (await questionRepository.GetAllAsync(cancellationToken))
@@ -72,6 +74,8 @@ public sealed class GetExamAttemptHandler(
 
         return Result.Success(new ExamAttemptResponse(
             attempt.Id, attempt.ExamId, attempt.AttemptNumber, attempt.StartedOn, exam.TimeLimitMinutes,
-            attempt.SubmittedOn, attempt.ScorePercentage, exam.PassScorePercentage, attempt.Passed, answers));
+            attempt.SubmittedOn, attempt.ScorePercentage, exam.PassScorePercentage, attempt.Passed,
+            attempt.ViolationCount, attempt.RequiresReview, attempt.ReviewApproved, attempt.ReviewedOn, attempt.ReviewNote,
+            answers));
     }
 }

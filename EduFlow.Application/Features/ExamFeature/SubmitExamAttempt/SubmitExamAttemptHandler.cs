@@ -93,6 +93,8 @@ public sealed class SubmitExamAttemptHandler(
 
         return Result.Success(new ExamAttemptResponse(
             attempt.Id, attempt.ExamId, attempt.AttemptNumber, attempt.StartedOn, exam.TimeLimitMinutes,
-            attempt.SubmittedOn, attempt.ScorePercentage, exam.PassScorePercentage, attempt.Passed, results));
+            attempt.SubmittedOn, attempt.ScorePercentage, exam.PassScorePercentage, attempt.Passed,
+            attempt.ViolationCount, attempt.RequiresReview, attempt.ReviewApproved, attempt.ReviewedOn, attempt.ReviewNote,
+            results));
     }
 }

@@ -5,7 +5,15 @@ using EduFlow.Domain.Abstractions;
 
 namespace EduFlow.Application.Features.ExamFeature.UpdateExam;
 
-public sealed record UpdateExamBody(string Title, int PassScorePercentage, int? TimeLimitMinutes, int? MaxAttempts);
+public sealed record UpdateExamBody(
+    string Title,
+    int PassScorePercentage,
+    int? TimeLimitMinutes,
+    int? MaxAttempts,
+    bool ProctoringEnabled,
+    bool RequireCamera,
+    int? SnapshotIntervalSeconds,
+    int? ViolationWarningThreshold);
 
 internal sealed class UpdateExamEndpoint : IApiEndpoint
 {
@@ -18,7 +26,9 @@ internal sealed class UpdateExamEndpoint : IApiEndpoint
                 CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(
-                    new UpdateExamRequest(id, body.Title, body.PassScorePercentage, body.TimeLimitMinutes, body.MaxAttempts),
+                    new UpdateExamRequest(
+                        id, body.Title, body.PassScorePercentage, body.TimeLimitMinutes, body.MaxAttempts,
+                        body.ProctoringEnabled, body.RequireCamera, body.SnapshotIntervalSeconds, body.ViolationWarningThreshold),
                     cancellationToken);
 
                 return result.Match(

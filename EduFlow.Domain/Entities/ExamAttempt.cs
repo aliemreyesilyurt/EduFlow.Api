@@ -12,4 +12,11 @@ public sealed class ExamAttempt : BaseEntity, ITenantEntity
     public DateTime? SubmittedOn { get; set; }
     public double? ScorePercentage { get; set; }
     public bool? Passed { get; set; }
+    public DateTime? ProctoringConsentOn { get; set; }
+    public int ViolationCount { get; set; }
+    public bool RequiresReview { get; set; }
+    public bool? ReviewApproved { get; set; }
+    public Guid? ReviewedBy { get; set; }
+    public DateTime? ReviewedOn { get; set; }
+    public string? ReviewNote { get; set; }
 }

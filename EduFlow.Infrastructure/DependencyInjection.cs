@@ -16,6 +16,7 @@ using EduFlow.Infrastructure.Interceptors;
 using EduFlow.Infrastructure.Logging;
 using EduFlow.Infrastructure.Multitenancy;
 using EduFlow.Infrastructure.Notifications;
+using EduFlow.Infrastructure.Proctoring;
 using EduFlow.Infrastructure.Repository;
 using EduFlow.Infrastructure.Security;
 using EduFlow.Infrastructure.Settings;
@@ -113,6 +114,9 @@ public static class DependencyInjection
 
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
         services.AddSingleton<IFileStorage, LocalFileStorage>();
+
+        services.Configure<ProctoringOptions>(configuration.GetSection(ProctoringOptions.SectionName));
+        services.AddHostedService<ProctoringRetentionService>();
 
         return services;
     }

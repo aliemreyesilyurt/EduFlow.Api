@@ -11,4 +11,5 @@ public static class ApiTags
     public const string SystemSettings = "system-settings";
     public const string Exams = "exams";
     public const string Tenants = "tenants";
+    public const string Proctoring = "proctoring";
 }

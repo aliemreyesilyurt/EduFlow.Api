@@ -10,5 +10,6 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
     {
         builder.HasIndex(t => t.Slug).IsUnique();
         builder.Property(t => t.AllowSelfRegistration).HasDefaultValue(false);
+        builder.Property(t => t.ProctoringRetentionDays).HasDefaultValue(30);
     }
 }

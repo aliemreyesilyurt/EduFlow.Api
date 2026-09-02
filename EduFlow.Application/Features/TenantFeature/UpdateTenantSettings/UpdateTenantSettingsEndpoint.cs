@@ -6,7 +6,10 @@ using EduFlow.Domain.Abstractions;
 
 namespace EduFlow.Application.Features.TenantFeature.UpdateTenantSettings;
 
-public sealed record UpdateTenantSettingsBody(bool AllowSelfRegistration);
+public sealed record UpdateTenantSettingsBody(
+    bool AllowSelfRegistration,
+    string? ProctoringConsentText,
+    int ProctoringRetentionDays);
 
 internal sealed class UpdateTenantSettingsEndpoint : IApiEndpoint
 {
@@ -18,7 +21,8 @@ internal sealed class UpdateTenantSettingsEndpoint : IApiEndpoint
                 CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(
-                    new UpdateTenantSettingsRequest(body.AllowSelfRegistration),
+                    new UpdateTenantSettingsRequest(
+                        body.AllowSelfRegistration, body.ProctoringConsentText, body.ProctoringRetentionDays),
                     cancellationToken);
 
                 return result.Match(
