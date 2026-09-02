@@ -23,5 +23,17 @@ public sealed class CreateExamValidator : AbstractValidator<CreateExamRequest>
         RuleFor(c => c.MaxAttempts)
             .GreaterThan(0).WithMessage("MaxAttempts must be positive")
             .When(c => c.MaxAttempts is not null);
+
+        RuleFor(c => c.ProctoringEnabled)
+            .Equal(true).WithMessage("RequireCamera cannot be enabled without ProctoringEnabled")
+            .When(c => c.RequireCamera);
+
+        RuleFor(c => c.SnapshotIntervalSeconds)
+            .InclusiveBetween(15, 600).WithMessage("SnapshotIntervalSeconds must be between 15 and 600")
+            .When(c => c.SnapshotIntervalSeconds is not null);
+
+        RuleFor(c => c.ViolationWarningThreshold)
+            .GreaterThanOrEqualTo(1).WithMessage("ViolationWarningThreshold must be at least 1")
+            .When(c => c.ViolationWarningThreshold is not null);
     }
 }

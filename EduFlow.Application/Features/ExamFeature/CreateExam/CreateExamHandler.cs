@@ -11,7 +11,11 @@ public sealed record CreateExamRequest(
     string Title,
     int PassScorePercentage,
     int? TimeLimitMinutes,
-    int? MaxAttempts);
+    int? MaxAttempts,
+    bool ProctoringEnabled,
+    bool RequireCamera,
+    int? SnapshotIntervalSeconds,
+    int? ViolationWarningThreshold);
 
 public sealed class CreateExamHandler(
     IRepository<Course> courseRepository,
@@ -48,7 +52,11 @@ public sealed class CreateExamHandler(
             PassScorePercentage = command.PassScorePercentage,
             TimeLimitMinutes = command.TimeLimitMinutes,
             MaxAttempts = command.MaxAttempts,
-            IsPublished = false
+            IsPublished = false,
+            ProctoringEnabled = command.ProctoringEnabled,
+            RequireCamera = command.RequireCamera,
+            SnapshotIntervalSeconds = command.SnapshotIntervalSeconds,
+            ViolationWarningThreshold = command.ViolationWarningThreshold
         };
 
         await examRepository.AddAsync(exam, cancellationToken);
@@ -56,6 +64,7 @@ public sealed class CreateExamHandler(
 
         return Result.Success(new ExamSummaryResponse(
             exam.Id, exam.CourseId, exam.Title, exam.PassScorePercentage,
-            exam.TimeLimitMinutes, exam.MaxAttempts, exam.IsPublished));
+            exam.TimeLimitMinutes, exam.MaxAttempts, exam.IsPublished,
+            exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold));
     }
 }

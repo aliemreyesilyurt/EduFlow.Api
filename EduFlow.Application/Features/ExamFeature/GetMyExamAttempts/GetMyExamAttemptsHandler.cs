@@ -14,7 +14,10 @@ public sealed record ExamAttemptSummary(
     DateTime StartedOn,
     DateTime? SubmittedOn,
     double? ScorePercentage,
-    bool? Passed);
+    bool? Passed,
+    int ViolationCount,
+    bool RequiresReview,
+    bool? ReviewApproved);
 
 public sealed record GetMyExamAttemptsResponse(IReadOnlyList<ExamAttemptSummary> Attempts);
 
@@ -48,7 +51,9 @@ public sealed class GetMyExamAttemptsHandler(
         var attempts = (await examAttemptRepository.GetAllAsync(cancellationToken))
             .Where(a => a.ExamId == exam.Id && a.StudentId == studentId)
             .OrderByDescending(a => a.StartedOn)
-            .Select(a => new ExamAttemptSummary(a.Id, a.AttemptNumber, a.StartedOn, a.SubmittedOn, a.ScorePercentage, a.Passed))
+            .Select(a => new ExamAttemptSummary(
+                a.Id, a.AttemptNumber, a.StartedOn, a.SubmittedOn, a.ScorePercentage, a.Passed,
+                a.ViolationCount, a.RequiresReview, a.ReviewApproved))
             .ToList();
 
         return Result.Success(new GetMyExamAttemptsResponse(attempts));

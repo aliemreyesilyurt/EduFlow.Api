@@ -8,5 +8,9 @@ public interface IFileStorage
 
     Task<StoredFile?> GetAsync(string relativeDirectory, CancellationToken cancellationToken = default);
 
+    Task<StoredFile?> GetAsync(string relativeDirectory, string fileName, CancellationToken cancellationToken = default);
+
     Task DeleteDirectoryAsync(string relativeDirectory, CancellationToken cancellationToken = default);
+
+    Task DeleteFileAsync(string relativeDirectory, string fileName, CancellationToken cancellationToken = default);
 }

@@ -87,5 +87,7 @@ public sealed class StartExamAttemptHandler(
 
     private static ExamAttemptResponse ToResponse(ExamAttempt attempt, Exam exam) => new(
         attempt.Id, attempt.ExamId, attempt.AttemptNumber, attempt.StartedOn, exam.TimeLimitMinutes,
-        attempt.SubmittedOn, attempt.ScorePercentage, null, attempt.Passed, null);
+        attempt.SubmittedOn, attempt.ScorePercentage, null, attempt.Passed,
+        attempt.ViolationCount, attempt.RequiresReview, attempt.ReviewApproved, attempt.ReviewedOn, attempt.ReviewNote,
+        null);
 }

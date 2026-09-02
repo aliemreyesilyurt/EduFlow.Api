@@ -16,6 +16,10 @@ public sealed record ExamDetailResponse(
     int? TimeLimitMinutes,
     int? MaxAttempts,
     bool IsPublished,
+    bool ProctoringEnabled,
+    bool RequireCamera,
+    int? SnapshotIntervalSeconds,
+    int? ViolationWarningThreshold,
     IReadOnlyList<QuestionResponse> Questions);
 
 public sealed class GetCourseExamHandler(
@@ -61,6 +65,8 @@ public sealed class GetCourseExamHandler(
 
         return Result.Success(new ExamDetailResponse(
             exam.Id, exam.CourseId, exam.Title, exam.PassScorePercentage,
-            exam.TimeLimitMinutes, exam.MaxAttempts, exam.IsPublished, questionResponses));
+            exam.TimeLimitMinutes, exam.MaxAttempts, exam.IsPublished,
+            exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold,
+            questionResponses));
     }
 }

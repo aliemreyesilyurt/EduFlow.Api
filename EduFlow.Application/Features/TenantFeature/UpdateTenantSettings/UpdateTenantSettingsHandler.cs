@@ -7,7 +7,10 @@ using EduFlow.Application.Features.TenantFeature.GetTenantSettings;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
 
-public sealed record UpdateTenantSettingsRequest(bool AllowSelfRegistration);
+public sealed record UpdateTenantSettingsRequest(
+    bool AllowSelfRegistration,
+    string? ProctoringConsentText,
+    int ProctoringRetentionDays);
 
 public sealed class UpdateTenantSettingsHandler(
     IRepository<Tenant> tenantRepository,
@@ -29,10 +32,14 @@ public sealed class UpdateTenantSettingsHandler(
         }
 
         tenant.AllowSelfRegistration = command.AllowSelfRegistration;
+        tenant.ProctoringConsentText = command.ProctoringConsentText;
+        tenant.ProctoringRetentionDays = command.ProctoringRetentionDays;
 
         await tenantRepository.UpdateAsync(tenant, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);
 
-        return Result.Success(new GetTenantSettingsResponse(tenant.Id, tenant.Name, tenant.Slug, tenant.AllowSelfRegistration));
+        return Result.Success(new GetTenantSettingsResponse(
+            tenant.Id, tenant.Name, tenant.Slug, tenant.AllowSelfRegistration,
+            tenant.ProctoringConsentText, tenant.ProctoringRetentionDays));
     }
 }

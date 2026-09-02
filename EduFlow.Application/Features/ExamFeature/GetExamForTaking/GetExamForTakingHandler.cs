@@ -4,8 +4,10 @@ using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
 using EduFlow.Application.Features.CourseFeature;
 using EduFlow.Application.Features.EnrollmentFeature;
+using EduFlow.Application.Options;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
+using Microsoft.Extensions.Options;
 
 public sealed record GetExamForTakingRequest(Guid CourseId);
 
@@ -18,6 +20,12 @@ public sealed record ExamTakingResponse(
     int AttemptsUsed,
     int? AttemptsRemaining,
     Guid? InProgressAttemptId,
+    bool ProctoringEnabled,
+    bool RequireCamera,
+    int? SnapshotIntervalSeconds,
+    int? ViolationWarningThreshold,
+    string ConsentText,
+    DateTime? ConsentGivenOn,
     IReadOnlyList<QuestionResponse> Questions);
 
 public sealed class GetExamForTakingHandler(
@@ -27,6 +35,8 @@ public sealed class GetExamForTakingHandler(
     IRepository<Question> questionRepository,
     IRepository<QuestionOption> optionRepository,
     IRepository<ExamAttempt> examAttemptRepository,
+    IRepository<Tenant> tenantRepository,
+    IOptions<ProctoringOptions> proctoringOptions,
     ITenantContext tenantContext) : IHandler<GetExamForTakingRequest, Result<ExamTakingResponse>>
 {
     public async Task<Result<ExamTakingResponse>> HandleAsync(GetExamForTakingRequest command, CancellationToken cancellationToken)
@@ -89,8 +99,16 @@ public sealed class GetExamForTakingHandler(
                     .ToList()))
             .ToList();
 
+        var tenant = tenantContext.TenantId is { } tenantId
+            ? await tenantRepository.FindAsync(t => t.Id == tenantId, cancellationToken)
+            : null;
+
+        var consentText = tenant?.ProctoringConsentText ?? proctoringOptions.Value.DefaultConsentText;
+
         return Result.Success(new ExamTakingResponse(
             exam.Id, exam.Title, exam.PassScorePercentage, exam.TimeLimitMinutes, exam.MaxAttempts,
-            attemptsUsed, attemptsRemaining, inProgress?.Id, questionResponses));
+            attemptsUsed, attemptsRemaining, inProgress?.Id,
+            exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold,
+            consentText, inProgress?.ProctoringConsentOn, questionResponses));
     }
 }

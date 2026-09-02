@@ -5,7 +5,15 @@ using EduFlow.Domain.Abstractions;
 
 namespace EduFlow.Application.Features.ExamFeature.CreateExam;
 
-public sealed record CreateExamBody(string Title, int PassScorePercentage, int? TimeLimitMinutes, int? MaxAttempts);
+public sealed record CreateExamBody(
+    string Title,
+    int PassScorePercentage,
+    int? TimeLimitMinutes,
+    int? MaxAttempts,
+    bool ProctoringEnabled,
+    bool RequireCamera,
+    int? SnapshotIntervalSeconds,
+    int? ViolationWarningThreshold);
 
 internal sealed class CreateExamEndpoint : IApiEndpoint
 {
@@ -18,7 +26,9 @@ internal sealed class CreateExamEndpoint : IApiEndpoint
                 CancellationToken cancellationToken) =>
             {
                 var result = await handler.HandleAsync(
-                    new CreateExamRequest(courseId, body.Title, body.PassScorePercentage, body.TimeLimitMinutes, body.MaxAttempts),
+                    new CreateExamRequest(
+                        courseId, body.Title, body.PassScorePercentage, body.TimeLimitMinutes, body.MaxAttempts,
+                        body.ProctoringEnabled, body.RequireCamera, body.SnapshotIntervalSeconds, body.ViolationWarningThreshold),
                     cancellationToken);
 
                 return result.Match(

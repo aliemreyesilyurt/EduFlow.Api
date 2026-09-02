@@ -39,6 +39,8 @@ public class ApplicationDbContext(
     public DbSet<QuestionOption> QuestionOptions { get; set; } = null!;
     public DbSet<ExamAttempt> ExamAttempts { get; set; } = null!;
     public DbSet<ExamAnswer> ExamAnswers { get; set; } = null!;
+    public DbSet<ProctoringEvent> ProctoringEvents { get; set; } = null!;
+    public DbSet<ProctoringSnapshot> ProctoringSnapshots { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

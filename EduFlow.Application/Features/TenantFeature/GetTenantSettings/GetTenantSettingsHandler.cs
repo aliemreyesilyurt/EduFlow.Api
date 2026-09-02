@@ -8,7 +8,13 @@ using EduFlow.Domain.Entities;
 
 public sealed record GetTenantSettingsRequest;
 
-public sealed record GetTenantSettingsResponse(Guid TenantId, string Name, string Slug, bool AllowSelfRegistration);
+public sealed record GetTenantSettingsResponse(
+    Guid TenantId,
+    string Name,
+    string Slug,
+    bool AllowSelfRegistration,
+    string? ProctoringConsentText,
+    int ProctoringRetentionDays);
 
 public sealed class GetTenantSettingsHandler(
     IRepository<Tenant> tenantRepository,
@@ -28,6 +34,8 @@ public sealed class GetTenantSettingsHandler(
             return AuthErrors.TenantNotFound;
         }
 
-        return Result.Success(new GetTenantSettingsResponse(tenant.Id, tenant.Name, tenant.Slug, tenant.AllowSelfRegistration));
+        return Result.Success(new GetTenantSettingsResponse(
+            tenant.Id, tenant.Name, tenant.Slug, tenant.AllowSelfRegistration,
+            tenant.ProctoringConsentText, tenant.ProctoringRetentionDays));
     }
 }

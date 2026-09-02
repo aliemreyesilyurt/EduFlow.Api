@@ -62,6 +62,30 @@ public sealed class LocalFileStorage : IFileStorage
         return Task.FromResult<StoredFile?>(new StoredFile(stream, contentType, Path.GetFileName(filePath)));
     }
 
+    public Task<StoredFile?> GetAsync(
+        string relativeDirectory,
+        string fileName,
+        CancellationToken cancellationToken = default)
+    {
+        var directory = Path.Combine(_rootPath, relativeDirectory);
+        var filePath = Path.Combine(directory, Path.GetFileName(fileName));
+
+        if (!File.Exists(filePath))
+        {
+            return Task.FromResult<StoredFile?>(null);
+        }
+
+        if (!ContentTypeProvider.TryGetContentType(filePath, out var contentType))
+        {
+            contentType = "application/octet-stream";
+        }
+
+        Stream stream = new FileStream(
+            filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true);
+
+        return Task.FromResult<StoredFile?>(new StoredFile(stream, contentType, Path.GetFileName(filePath)));
+    }
+
     public Task DeleteDirectoryAsync(string relativeDirectory, CancellationToken cancellationToken = default)
     {
         var directory = Path.Combine(_rootPath, relativeDirectory);
@@ -69,6 +93,21 @@ public sealed class LocalFileStorage : IFileStorage
         if (Directory.Exists(directory))
         {
             Directory.Delete(directory, recursive: true);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteFileAsync(
+        string relativeDirectory,
+        string fileName,
+        CancellationToken cancellationToken = default)
+    {
+        var filePath = Path.Combine(_rootPath, relativeDirectory, Path.GetFileName(fileName));
+
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
         }
 
         return Task.CompletedTask;

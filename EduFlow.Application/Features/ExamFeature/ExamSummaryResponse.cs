@@ -7,4 +7,8 @@ public sealed record ExamSummaryResponse(
     int PassScorePercentage,
     int? TimeLimitMinutes,
     int? MaxAttempts,
-    bool IsPublished);
+    bool IsPublished,
+    bool ProctoringEnabled,
+    bool RequireCamera,
+    int? SnapshotIntervalSeconds,
+    int? ViolationWarningThreshold);

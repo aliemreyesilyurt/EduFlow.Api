@@ -51,6 +51,7 @@ public sealed class PublishExamHandler(
 
         return Result.Success(new ExamSummaryResponse(
             exam.Id, exam.CourseId, exam.Title, exam.PassScorePercentage,
-            exam.TimeLimitMinutes, exam.MaxAttempts, exam.IsPublished));
+            exam.TimeLimitMinutes, exam.MaxAttempts, exam.IsPublished,
+            exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold));
     }
 }
