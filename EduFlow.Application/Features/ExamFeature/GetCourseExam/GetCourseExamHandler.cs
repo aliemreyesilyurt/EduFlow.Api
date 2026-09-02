@@ -20,6 +20,7 @@ public sealed record ExamDetailResponse(
     bool RequireCamera,
     int? SnapshotIntervalSeconds,
     int? ViolationWarningThreshold,
+    int RewardPoints,
     IReadOnlyList<QuestionResponse> Questions);
 
 public sealed class GetCourseExamHandler(
@@ -67,6 +68,6 @@ public sealed class GetCourseExamHandler(
             exam.Id, exam.CourseId, exam.Title, exam.PassScorePercentage,
             exam.TimeLimitMinutes, exam.MaxAttempts, exam.IsPublished,
             exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold,
-            questionResponses));
+            exam.RewardPoints, questionResponses));
     }
 }

@@ -15,7 +15,8 @@ public sealed record CreateExamRequest(
     bool ProctoringEnabled,
     bool RequireCamera,
     int? SnapshotIntervalSeconds,
-    int? ViolationWarningThreshold);
+    int? ViolationWarningThreshold,
+    int RewardPoints);
 
 public sealed class CreateExamHandler(
     IRepository<Course> courseRepository,
@@ -56,7 +57,8 @@ public sealed class CreateExamHandler(
             ProctoringEnabled = command.ProctoringEnabled,
             RequireCamera = command.RequireCamera,
             SnapshotIntervalSeconds = command.SnapshotIntervalSeconds,
-            ViolationWarningThreshold = command.ViolationWarningThreshold
+            ViolationWarningThreshold = command.ViolationWarningThreshold,
+            RewardPoints = command.RewardPoints
         };
 
         await examRepository.AddAsync(exam, cancellationToken);
@@ -65,6 +67,7 @@ public sealed class CreateExamHandler(
         return Result.Success(new ExamSummaryResponse(
             exam.Id, exam.CourseId, exam.Title, exam.PassScorePercentage,
             exam.TimeLimitMinutes, exam.MaxAttempts, exam.IsPublished,
-            exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold));
+            exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold,
+            exam.RewardPoints));
     }
 }

@@ -132,10 +132,29 @@ public static class DemoDataSeeder
             ProctoringEnabled = true,
             RequireCamera = true,
             SnapshotIntervalSeconds = 20,
-            ViolationWarningThreshold = 3
+            ViolationWarningThreshold = 3,
+            RewardPoints = 100
         };
 
         dbContext.Exams.Add(exam);
+
+        var pointsRules = new[]
+        {
+            new PointsRule
+            {
+                Id = Guid.CreateVersion7(), TenantId = tenant.Id,
+                Title = "Sertifika kilidini aç", Description = "Kurs sertifikanızı indirin.",
+                PointsCost = 100, IsActive = true
+            },
+            new PointsRule
+            {
+                Id = Guid.CreateVersion7(), TenantId = tenant.Id,
+                Title = "Öncelikli destek", Description = "Destek taleplerinizin öncelikli işlenmesi.",
+                PointsCost = 250, IsActive = true
+            }
+        };
+
+        dbContext.PointsRules.AddRange(pointsRules);
 
         var questions = new (string Text, (string Text, bool IsCorrect)[] Options)[]
         {

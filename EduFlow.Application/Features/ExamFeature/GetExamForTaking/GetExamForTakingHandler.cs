@@ -24,6 +24,7 @@ public sealed record ExamTakingResponse(
     bool RequireCamera,
     int? SnapshotIntervalSeconds,
     int? ViolationWarningThreshold,
+    int RewardPoints,
     string ConsentText,
     DateTime? ConsentGivenOn,
     IReadOnlyList<QuestionResponse> Questions);
@@ -109,6 +110,6 @@ public sealed class GetExamForTakingHandler(
             exam.Id, exam.Title, exam.PassScorePercentage, exam.TimeLimitMinutes, exam.MaxAttempts,
             attemptsUsed, attemptsRemaining, inProgress?.Id,
             exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold,
-            consentText, inProgress?.ProctoringConsentOn, questionResponses));
+            exam.RewardPoints, consentText, inProgress?.ProctoringConsentOn, questionResponses));
     }
 }

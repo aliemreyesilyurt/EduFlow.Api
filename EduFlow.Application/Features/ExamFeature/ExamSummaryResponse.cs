@@ -11,4 +11,5 @@ public sealed record ExamSummaryResponse(
     bool ProctoringEnabled,
     bool RequireCamera,
     int? SnapshotIntervalSeconds,
-    int? ViolationWarningThreshold);
+    int? ViolationWarningThreshold,
+    int RewardPoints);

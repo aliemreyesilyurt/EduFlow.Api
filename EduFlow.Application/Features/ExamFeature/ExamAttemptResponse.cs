@@ -22,4 +22,5 @@ public sealed record ExamAttemptResponse(
     bool? ReviewApproved,
     DateTime? ReviewedOn,
     string? ReviewNote,
+    bool PointsAwarded,
     IReadOnlyList<ExamAnswerResult>? Answers);

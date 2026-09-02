@@ -35,5 +35,8 @@ public sealed class CreateExamValidator : AbstractValidator<CreateExamRequest>
         RuleFor(c => c.ViolationWarningThreshold)
             .GreaterThanOrEqualTo(1).WithMessage("ViolationWarningThreshold must be at least 1")
             .When(c => c.ViolationWarningThreshold is not null);
+
+        RuleFor(c => c.RewardPoints)
+            .GreaterThanOrEqualTo(0).WithMessage("RewardPoints cannot be negative");
     }
 }

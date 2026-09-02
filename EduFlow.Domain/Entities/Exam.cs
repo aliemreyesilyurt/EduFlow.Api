@@ -15,4 +15,5 @@ public sealed class Exam : BaseEntity, ITenantEntity
     public bool RequireCamera { get; set; }
     public int? SnapshotIntervalSeconds { get; set; }
     public int? ViolationWarningThreshold { get; set; }
+    public int RewardPoints { get; set; }
 }

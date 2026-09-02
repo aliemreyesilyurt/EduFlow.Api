@@ -19,4 +19,5 @@ public sealed class ExamAttempt : BaseEntity, ITenantEntity
     public Guid? ReviewedBy { get; set; }
     public DateTime? ReviewedOn { get; set; }
     public string? ReviewNote { get; set; }
+    public bool PointsAwarded { get; set; }
 }

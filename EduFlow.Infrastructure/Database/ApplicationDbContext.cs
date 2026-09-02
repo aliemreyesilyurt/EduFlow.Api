@@ -41,6 +41,9 @@ public class ApplicationDbContext(
     public DbSet<ExamAnswer> ExamAnswers { get; set; } = null!;
     public DbSet<ProctoringEvent> ProctoringEvents { get; set; } = null!;
     public DbSet<ProctoringSnapshot> ProctoringSnapshots { get; set; } = null!;
+    public DbSet<PointsWallet> PointsWallets { get; set; } = null!;
+    public DbSet<PointsLedgerEntry> PointsLedgerEntries { get; set; } = null!;
+    public DbSet<PointsRule> PointsRules { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

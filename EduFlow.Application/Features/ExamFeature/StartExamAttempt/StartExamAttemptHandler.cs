@@ -89,5 +89,5 @@ public sealed class StartExamAttemptHandler(
         attempt.Id, attempt.ExamId, attempt.AttemptNumber, attempt.StartedOn, exam.TimeLimitMinutes,
         attempt.SubmittedOn, attempt.ScorePercentage, null, attempt.Passed,
         attempt.ViolationCount, attempt.RequiresReview, attempt.ReviewApproved, attempt.ReviewedOn, attempt.ReviewNote,
-        null);
+        attempt.PointsAwarded, null);
 }

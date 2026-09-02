@@ -13,7 +13,8 @@ public sealed record CreateExamBody(
     bool ProctoringEnabled,
     bool RequireCamera,
     int? SnapshotIntervalSeconds,
-    int? ViolationWarningThreshold);
+    int? ViolationWarningThreshold,
+    int RewardPoints);
 
 internal sealed class CreateExamEndpoint : IApiEndpoint
 {
@@ -28,7 +29,8 @@ internal sealed class CreateExamEndpoint : IApiEndpoint
                 var result = await handler.HandleAsync(
                     new CreateExamRequest(
                         courseId, body.Title, body.PassScorePercentage, body.TimeLimitMinutes, body.MaxAttempts,
-                        body.ProctoringEnabled, body.RequireCamera, body.SnapshotIntervalSeconds, body.ViolationWarningThreshold),
+                        body.ProctoringEnabled, body.RequireCamera, body.SnapshotIntervalSeconds, body.ViolationWarningThreshold,
+                        body.RewardPoints),
                     cancellationToken);
 
                 return result.Match(

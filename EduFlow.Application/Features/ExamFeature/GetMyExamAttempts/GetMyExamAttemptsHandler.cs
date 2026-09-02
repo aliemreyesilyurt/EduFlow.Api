@@ -17,7 +17,8 @@ public sealed record ExamAttemptSummary(
     bool? Passed,
     int ViolationCount,
     bool RequiresReview,
-    bool? ReviewApproved);
+    bool? ReviewApproved,
+    bool PointsAwarded);
 
 public sealed record GetMyExamAttemptsResponse(IReadOnlyList<ExamAttemptSummary> Attempts);
 
@@ -53,7 +54,7 @@ public sealed class GetMyExamAttemptsHandler(
             .OrderByDescending(a => a.StartedOn)
             .Select(a => new ExamAttemptSummary(
                 a.Id, a.AttemptNumber, a.StartedOn, a.SubmittedOn, a.ScorePercentage, a.Passed,
-                a.ViolationCount, a.RequiresReview, a.ReviewApproved))
+                a.ViolationCount, a.RequiresReview, a.ReviewApproved, a.PointsAwarded))
             .ToList();
 
         return Result.Success(new GetMyExamAttemptsResponse(attempts));

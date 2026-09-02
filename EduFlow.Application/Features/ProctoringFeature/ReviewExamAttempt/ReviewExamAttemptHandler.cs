@@ -4,6 +4,7 @@ using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
 using EduFlow.Application.Features.CourseFeature;
 using EduFlow.Application.Features.ExamFeature;
+using EduFlow.Application.Features.PointsFeature;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
 
@@ -15,6 +16,7 @@ public sealed class ReviewExamAttemptHandler(
     IRepository<ExamAttempt> examAttemptRepository,
     IRepository<Exam> examRepository,
     IRepository<Course> courseRepository,
+    IPointsAwardService pointsAwardService,
     IUnitOfWork unitOfWork,
     ITenantContext tenantContext) : IHandler<ReviewExamAttemptRequest, Result<ReviewExamAttemptResponse>>
 {
@@ -52,6 +54,11 @@ public sealed class ReviewExamAttemptHandler(
         attempt.ReviewedOn = DateTime.UtcNow;
         attempt.ReviewNote = command.Note;
         attempt.RequiresReview = false;
+
+        if (command.Approved && attempt.Passed == true && exam.RewardPoints > 0 && !attempt.PointsAwarded)
+        {
+            await pointsAwardService.AwardExamPointsAsync(attempt, exam, cancellationToken);
+        }
 
         await examAttemptRepository.UpdateAsync(attempt, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);

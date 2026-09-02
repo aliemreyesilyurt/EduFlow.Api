@@ -2,6 +2,7 @@ namespace EduFlow.Application.Features.ExamFeature.SubmitExamAttempt;
 
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Abstractions.Data;
+using EduFlow.Application.Features.PointsFeature;
 using EduFlow.Domain.Abstractions;
 using EduFlow.Domain.Entities;
 
@@ -15,6 +16,7 @@ public sealed class SubmitExamAttemptHandler(
     IRepository<Question> questionRepository,
     IRepository<QuestionOption> optionRepository,
     IRepository<ExamAnswer> examAnswerRepository,
+    IPointsAwardService pointsAwardService,
     IUnitOfWork unitOfWork,
     ITenantContext tenantContext) : IHandler<SubmitExamAttemptRequest, Result<ExamAttemptResponse>>
 {
@@ -88,6 +90,14 @@ public sealed class SubmitExamAttemptHandler(
         attempt.ScorePercentage = scorePercentage;
         attempt.Passed = passed;
 
+        // A review-required attempt only earns points once ReviewExamAttemptHandler approves it;
+        // otherwise (no proctoring, or no violations serious enough to require review) passing is
+        // itself sufficient, so the reward is credited immediately.
+        if (passed && exam.RewardPoints > 0 && !attempt.RequiresReview && !attempt.PointsAwarded)
+        {
+            await pointsAwardService.AwardExamPointsAsync(attempt, exam, cancellationToken);
+        }
+
         await examAttemptRepository.UpdateAsync(attempt, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);
 
@@ -95,6 +105,6 @@ public sealed class SubmitExamAttemptHandler(
             attempt.Id, attempt.ExamId, attempt.AttemptNumber, attempt.StartedOn, exam.TimeLimitMinutes,
             attempt.SubmittedOn, attempt.ScorePercentage, exam.PassScorePercentage, attempt.Passed,
             attempt.ViolationCount, attempt.RequiresReview, attempt.ReviewApproved, attempt.ReviewedOn, attempt.ReviewNote,
-            results));
+            attempt.PointsAwarded, results));
     }
 }

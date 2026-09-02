@@ -15,7 +15,8 @@ public sealed record UpdateExamRequest(
     bool ProctoringEnabled,
     bool RequireCamera,
     int? SnapshotIntervalSeconds,
-    int? ViolationWarningThreshold);
+    int? ViolationWarningThreshold,
+    int RewardPoints);
 
 public sealed class UpdateExamHandler(
     IRepository<Exam> examRepository,
@@ -47,6 +48,7 @@ public sealed class UpdateExamHandler(
         exam.RequireCamera = command.RequireCamera;
         exam.SnapshotIntervalSeconds = command.SnapshotIntervalSeconds;
         exam.ViolationWarningThreshold = command.ViolationWarningThreshold;
+        exam.RewardPoints = command.RewardPoints;
 
         await examRepository.UpdateAsync(exam, cancellationToken);
         await unitOfWork.CommitAsync(cancellationToken);
@@ -54,6 +56,7 @@ public sealed class UpdateExamHandler(
         return Result.Success(new ExamSummaryResponse(
             exam.Id, exam.CourseId, exam.Title, exam.PassScorePercentage,
             exam.TimeLimitMinutes, exam.MaxAttempts, exam.IsPublished,
-            exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold));
+            exam.ProctoringEnabled, exam.RequireCamera, exam.SnapshotIntervalSeconds, exam.ViolationWarningThreshold,
+            exam.RewardPoints));
     }
 }

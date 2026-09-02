@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using EduFlow.Application.Abstractions;
 using EduFlow.Application.Extensions;
+using EduFlow.Application.Features.PointsFeature;
 using EduFlow.Application.Pipelines;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,10 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly);
         services.AddHandlersFromAssembly(assembly);
         services.RegisterApiEndpointsFromAssembly(assembly);
+
+        // Not an IHandler<,> — shared by two handlers (SubmitExamAttempt/ReviewExamAttempt), so it
+        // isn't picked up by the assembly scan above and needs its own registration.
+        services.AddScoped<IPointsAwardService, PointsAwardService>();
 
         return services;
     }
