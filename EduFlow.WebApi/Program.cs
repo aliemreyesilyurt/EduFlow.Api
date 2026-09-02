@@ -127,6 +127,11 @@ using (var scope = app.Services.CreateScope())
 await IdentitySeeder.SeedAsync(app.Services);
 await SystemSettingsSeeder.SeedAsync(app.Services);
 
+if (app.Environment.IsDevelopment())
+{
+    await DemoDataSeeder.SeedAsync(app.Services);
+}
+
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("VueClient");
